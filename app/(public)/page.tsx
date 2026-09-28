@@ -45,6 +45,14 @@ const people = [
   { role: 'Bendahara', name: 'Maulidya Dliyaun Najah', image: '/bpi/mau.png' },
 ]
 
+const navLinks = [
+  { name: 'Beranda', path: '/' },
+  { name: 'Profil', path: '/about' },
+  { name: 'Berita', path: '/news' },
+  { name: 'Agenda', path: '/events' },
+  { name: 'Kontak', path: '/contact' },
+]
+
 const reveal = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0, transition: { duration: 0.65 } } }
 
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -71,71 +79,67 @@ export default function Page() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4f8fc] text-[#0a192f]">
-      {/* Background Meshes */}
       <div className="absolute left-0 top-0 -z-10 h-full w-full overflow-hidden">
         <div className="absolute left-[-10%] top-[-5%] h-125 w-125 rounded-full bg-blue-400/20 blur-[120px]" />
         <div className="absolute right-[-5%] top-[20%] h-150 w-150 rounded-full bg-cyan-300/20 blur-[150px]" />
       </div>
 
       <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 sm:px-6 lg:px-10">
-  <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/70 bg-white/60 px-4 py-3 shadow-lg shadow-blue-900/5 backdrop-blur-xl sm:px-6">
-    <a href="#beranda" className="flex items-center gap-2 font-black tracking-tight text-[#0a192f] transition-transform hover:scale-105">
-      {/* 
-        Fix: Mengembalikan ke /himatifa.png karena himatifabg.png 
-        memiliki background solid hitam yang menutupi desain.
-      */}
-      <Image 
-        src="/himatifabg.png" 
-        alt="Logo HIMATIFA UMSurabaya" 
-        width={64} 
-        height={64} 
-        className="object-contain" 
-      />
-      HIMATIFA
-    </a>
-    
-    <div className="hidden items-center gap-7 text-[13px] font-semibold text-slate-600 lg:flex">
-      {['Beranda', 'Profil', 'BPH', 'Departemen', 'Berita', 'Agenda'].map((item) => (
-        <a key={item} href={`#${item.toLowerCase()}`} className="transition-colors hover:text-[#2563eb]">{item}</a>
-      ))}
-    </div>
-    
-    {/* Fix: Mengubah sm:block menjadi lg:flex agar konsisten dengan breakpoint menu mobile */}
-    <Link href="/ekrafstore" className="hidden items-center rounded-full bg-[#2563eb] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-transform hover:-translate-y-0.5 lg:flex">
-      Ekraf Store <ArrowUpRight className="ml-1 inline size-3.5" />
-    </Link>
+        <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/70 bg-white/60 px-4 py-3 shadow-lg shadow-blue-900/5 backdrop-blur-xl sm:px-6">
+          <Link href="/" className="flex items-center gap-2 font-black tracking-tight text-[#0a192f] transition-transform hover:scale-105">
+            <Image 
+              src="/himatifabg.png" 
+              alt="Logo HIMATIFA UMSurabaya" 
+              width={64} 
+              height={64} 
+              className="object-contain" 
+            />
+            HIMATIFA
+          </Link>
+          
+          <div className="hidden items-center gap-7 text-[13px] font-semibold text-slate-600 lg:flex">
+            {navLinks.map((item) => (
+              <Link key={item.name} href={item.path} className="transition-colors hover:text-[#2563eb]">{item.name}</Link>
+            ))}
+            {/* Scroll Link Khusus Departemen */}
+            <a href="#departemen" className="transition-colors hover:text-[#2563eb]">Departemen</a>
+          </div>
+          
+          <Link href="/ekrafstore" className="hidden items-center rounded-full bg-[#2563eb] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-transform hover:-translate-y-0.5 lg:flex">
+            Ekraf Store <ArrowUpRight className="ml-1 inline size-3.5" />
+          </Link>
 
-    <button aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'} onClick={() => setMobileOpen(!mobileOpen)} className="rounded-full p-2 lg:hidden">
-      {mobileOpen ? <X /> : <Menu />}
-    </button>
-  </nav>
+          <button aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'} onClick={() => setMobileOpen(!mobileOpen)} className="rounded-full p-2 lg:hidden">
+            {mobileOpen ? <X /> : <Menu />}
+          </button>
+        </nav>
 
-  {mobileOpen && (
-    <div className="mx-2 mt-2 flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-xl lg:hidden">
-      {['Beranda', 'Profil', 'BPH', 'Departemen', 'Berita', 'Agenda'].map((item) => (
-        <a onClick={() => setMobileOpen(false)} key={item} href={`#${item.toLowerCase()}`} className="font-semibold text-slate-700 hover:text-[#2563eb]">{item}</a>
-      ))}
-      
-      {/* Fix: Menambahkan tombol Ekraf Store khusus untuk tampilan dropdown Mobile */}
-      <hr className="my-1 border-slate-200" />
-      <Link 
-        onClick={() => setMobileOpen(false)} 
-        href="/ekrafstore" 
-        className="flex items-center justify-center gap-2 rounded-xl bg-[#2563eb] py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 active:scale-95 transition-transform"
-      >
-        Ekraf Store <ArrowUpRight className="size-4" />
-      </Link>
-    </div>
-  )}
-</header>
+        {mobileOpen && (
+          <div className="mx-2 mt-2 flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/90 p-5 shadow-xl backdrop-blur-xl lg:hidden">
+            {navLinks.map((item) => (
+              <Link onClick={() => setMobileOpen(false)} key={item.name} href={item.path} className="font-semibold text-slate-700 hover:text-[#2563eb]">{item.name}</Link>
+            ))}
+            <a onClick={() => setMobileOpen(false)} href="#departemen" className="font-semibold text-slate-700 hover:text-[#2563eb]">Departemen</a>
+            
+            <hr className="my-1 border-slate-200" />
+            <Link 
+              onClick={() => setMobileOpen(false)} 
+              href="/ekrafstore" 
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#2563eb] py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 active:scale-95 transition-transform"
+            >
+              Ekraf Store <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
+        )}
+      </header>
 
       <section id="beranda" className="relative mx-auto grid min-h-190 max-w-7xl items-center gap-14 px-6 pb-20 pt-36 lg:grid-cols-[1.05fr_.95fr] lg:px-10">
         <motion.div initial="hidden" animate="show" variants={reveal}>
           <h1 className="max-w-3xl text-5xl font-black leading-[1.02] tracking-[-0.055em] sm:text-7xl">Inovasi Tanpa Batas,<br /><span className="text-[#2563eb]">Sinergi S1 Informatika.</span></h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-slate-500 sm:text-lg">Wadah kolaborasi mahasiswa Informatika Universitas Muhammadiyah Surabaya untuk mengasah kompetensi teknis dan berdaya saing global.</p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <a href="#profil" className="rounded-full bg-[#2563eb] px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1 hover:bg-blue-700">Kenali HIMATIFA <ArrowRight className="ml-2 inline size-4" /></a>
-            <a href="#agenda" className="rounded-full border border-slate-200 bg-white/50 px-6 py-3.5 text-sm font-bold text-slate-700 backdrop-blur transition-all hover:-translate-y-1 hover:border-blue-200 hover:text-[#2563eb]">Jelajahi Proker</a>
+            <Link href="/about" className="rounded-full bg-[#2563eb] px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1 hover:bg-blue-700">Kenali HIMATIFA <ArrowRight className="ml-2 inline size-4" /></Link>
+            <Link href="/events" className="rounded-full border border-slate-200 bg-white/50 px-6 py-3.5 text-sm font-bold text-slate-700 backdrop-blur transition-all hover:-translate-y-1 hover:border-blue-200 hover:text-[#2563eb]">Jelajahi Agenda</Link>
           </div>
           <div className="mt-12 flex items-center gap-4 text-sm text-slate-500">
             <div className="flex -space-x-2">
@@ -190,6 +194,7 @@ export default function Page() {
               <span className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-blue-200">01 / Visi kami</span>
               <h3 className="max-w-lg text-3xl font-black tracking-tight sm:text-4xl">Menjadi ruang tumbuh bagi talenta digital masa depan.</h3>
               <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Mendorong mahasiswa Informatika untuk berani bereksplorasi, saling terhubung, dan menciptakan solusi yang bermakna.</p>
+              <Link href="/about" className="mt-6 w-fit rounded-full bg-[#2563eb] px-6 py-2 text-sm font-bold text-white transition hover:bg-blue-700">Baca Visi & Misi</Link>
             </div>
           </GlassCard>
           <GlassCard className="p-7">
@@ -306,7 +311,7 @@ export default function Page() {
               <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-blue-300">Kalender kegiatan</p>
               <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Agenda <span className="text-blue-300">Terdekat.</span></h2>
             </div>
-            <a href="#agenda" className="hidden text-sm font-bold text-blue-300 hover:text-white sm:block">Lihat semua <ArrowRight className="ml-1 inline size-4" /></a>
+            <Link href="/events" className="hidden text-sm font-bold text-blue-300 hover:text-white sm:block">Lihat semua <ArrowRight className="ml-1 inline size-4" /></Link>
           </div>
           <div className="flex flex-col">
             {[{ date: '21', month: 'SEP', title: 'OSCAR 2026', desc: 'Opening Student Collaboration & Achievement Recognition', place: 'Auditorium UMSurabaya' }, { date: '04', month: 'OKT', title: 'Study Club GitHub', desc: 'Level up your workflow, one commit at a time.', place: 'Lab Informatika 2' }, { date: '18', month: 'OKT', title: 'HIMATIFA Care', desc: 'Berbagi langkah kecil, memberi dampak yang besar.', place: 'Kampung Nelayan Kenjeran' }].map((event) => (
@@ -335,7 +340,7 @@ export default function Page() {
             <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">Cerita terbaru</p>
             <h2 className="text-4xl font-black tracking-tight sm:text-5xl">Kabar <span>Terbaru.</span></h2>
           </div>
-          <a href="#berita" className="hidden text-sm font-bold text-[#2563eb] sm:block">Semua kabar <ArrowRight className="ml-1 inline size-4" /></a>
+          <Link href="/news" className="hidden text-sm font-bold text-[#2563eb] sm:block">Semua kabar <ArrowRight className="ml-1 inline size-4" /></Link>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {[{ tag: 'Organisasi', title: 'Merawat ruang tumbuh lewat kolaborasi', text: 'HIMATIFA membuka semester baru dengan semangat dan cara pandang yang lebih segar.', image: '/berita-1.jpg' }, { tag: 'Prestasi', title: 'Dari kampus untuk panggung global', text: 'Cerita mahasiswa Informatika yang berani membawa karya ke level berikutnya.', image: '/berita-2.jpg' }, { tag: 'Kegiatan', title: 'Belajar tidak harus sendirian', text: 'Mengenal lebih dekat komunitas belajar yang membuat proses jadi menyenangkan.', image: '/berita-3.jpg' }].map((article) => (
@@ -347,7 +352,7 @@ export default function Page() {
                 <span className="text-[10px] font-bold uppercase tracking-[.18em] text-[#2563eb]">{article.tag}</span>
                 <h3 className="mt-3 text-xl font-extrabold leading-tight">{article.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-500">{article.text}</p>
-                <a href="#berita" className="mt-5 inline-block text-sm font-bold text-[#2563eb]">Baca selengkapnya <ArrowUpRight className="ml-1 inline size-4" /></a>
+                <Link href="/news" className="mt-5 inline-block text-sm font-bold text-[#2563eb] transition-all hover:gap-2">Baca selengkapnya <ArrowUpRight className="ml-1 inline size-4" /></Link>
               </div>
             </article>
           ))}
@@ -357,7 +362,7 @@ export default function Page() {
       <footer id="footer" className="bg-[#071426] px-6 py-16 text-white lg:px-10">
         <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[1.4fr_.7fr_1fr]">
           <div>
-            <a href="#beranda" className="flex items-center gap-2 font-black tracking-tight">
+            <Link href="/" className="flex items-center gap-2 font-black tracking-tight">
               <Image 
                 src="/himatifa1.png" 
                 alt="Logo HIMATIFA UMSurabaya" 
@@ -366,26 +371,30 @@ export default function Page() {
                 className="object-contain brightness-0 invert" 
               />
               HIMATIFA
-            </a>
+            </Link>
             <p className="mt-5 max-w-xs text-sm leading-6 text-blue-100/60">Himpunan Mahasiswa Teknik Informatika Universitas Muhammadiyah Surabaya.</p>
             <div className="mt-6 flex gap-2">
-              <a aria-label="Instagram HIMATIFA" href="#footer" className="grid size-9 place-items-center rounded-full bg-white/10 transition hover:bg-[#2563eb]"><Globe2 className="size-4" /></a>
-              <a aria-label="Facebook HIMATIFA" href="#footer" className="grid size-9 place-items-center rounded-full bg-white/10 transition hover:bg-[#2563eb]"><MessageCircle className="size-4" /></a>
+              <Link aria-label="Instagram HIMATIFA" href="/contact" className="grid size-9 place-items-center rounded-full bg-white/10 transition hover:bg-[#2563eb]"><Globe2 className="size-4" /></Link>
+              <Link aria-label="Facebook HIMATIFA" href="/contact" className="grid size-9 place-items-center rounded-full bg-white/10 transition hover:bg-[#2563eb]"><MessageCircle className="size-4" /></Link>
             </div>
           </div>
           <div>
             <h3 className="text-sm font-bold">Jelajahi</h3>
             <div className="mt-5 flex flex-col gap-3 text-sm text-blue-100/60">
-              <a href="#profil" className="hover:text-white">Tentang kami</a>
+              <Link href="/about" className="hover:text-white">Tentang kami</Link>
               <a href="#bph" className="hover:text-white">BPH 2026</a>
               <a href="#departemen" className="hover:text-white">Departemen</a>
-              <a href="#berita" className="hover:text-white">Berita</a>
+              <Link href="/news" className="hover:text-white">Berita</Link>
+              <Link href="/events" className="hover:text-white">Agenda</Link>
             </div>
           </div>
           <div>
             <h3 className="text-sm font-bold">Mari terhubung</h3>
             <a href="mailto:himatifa@ft.um-surabaya.ac.id" className="mt-5 flex items-center gap-2 text-sm text-blue-100/60 hover:text-white"><Mail className="size-4 text-blue-300" /> himatifa@ft.um-surabaya.ac.id</a>
             <p className="mt-4 flex items-start gap-2 text-sm leading-6 text-blue-100/60"><MapPin className="mt-1 size-4 shrink-0 text-blue-300" />Jl. Sutorejo No. 59, Surabaya</p>
+            <Link href="/contact" className="mt-4 inline-block text-xs font-bold text-blue-300 hover:text-white">
+              Buka Halaman Kontak →
+            </Link>
           </div>
         </div>
         <div className="mx-auto mt-14 max-w-7xl border-t border-white/10 pt-6 text-xs text-blue-100/40">© 2026 HIMATIFA Universitas Muhammadiyah Surabaya</div>
