@@ -12,7 +12,6 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    // Log error ke console atau layanan tracking seperti Sentry di production
     console.error('Runtime Error caught by app/error.tsx:', error)
   }, [error])
 

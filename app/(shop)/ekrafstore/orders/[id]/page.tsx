@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, Clock, Copy, Download, MapPin, MessageCircle, Package, Receipt } from 'lucide-react'
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  // Mock data ID pesanan dari URL
   const orderId = params.id.toUpperCase()
 
   return (
