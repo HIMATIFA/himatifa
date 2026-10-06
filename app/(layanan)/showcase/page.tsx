@@ -37,7 +37,7 @@ const projects = [
     tags: ['Capacitor', 'Mobile', 'Education'],
     link: '#',
     repo: 'https://github.com/muhammadarya-ums/NusAR',
-    image: '/showcase-2.jpg' 
+    image: '/showcase-2.jpg'
   },
   {
     id: 3,
@@ -69,7 +69,7 @@ export default function ShowcasePage() {
           </div>
           <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Karya Digital <br /><span className="text-[#2563eb]">Mahasiswa.</span></h1>
           <p className="mt-5 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
-            Ruang apresiasi untuk inovasi, aplikasi, dan riset teknologi yang lahir dari tangan-tangan kreatif mahasiswa S1 Informatika UMSurabaya.
+            Ruang apresiasi untuk inovasi, aplikasi, dan riset teknologi yang lahir dari tangan-tangan kreatif mahasiswa S1 Informatika UMSURA.
           </p>
         </div>
 
@@ -78,17 +78,16 @@ export default function ShowcasePage() {
             <div key={project.id} className="group flex flex-col overflow-hidden rounded-[2rem] border border-white/80 bg-white/60 shadow-lg shadow-blue-900/5 backdrop-blur-xl transition hover:-translate-y-1 hover:shadow-xl">
               <div className="aspect-video w-full bg-[#0a192f] relative overflow-hidden">
                 <div className="absolute inset-0 bg-blue-500/10 mix-blend-overlay transition group-hover:bg-transparent" />
-                {/* Fallback pattern jika gambar belum ada */}
                 <div className="flex h-full w-full items-center justify-center text-blue-100/20">
                   <MonitorSmartphone className="size-12" />
                 </div>
               </div>
-              
+
               <div className="flex flex-1 flex-col p-6">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#2563eb]">{project.developer}</span>
                 <h3 className="mt-1 text-xl font-black text-[#0a192f]">{project.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-500 line-clamp-3">{project.desc}</p>
-                
+
                 <div className="mt-5 flex flex-wrap gap-2">
                   {project.tags.map(tag => (
                     <span key={tag} className="rounded-full bg-blue-50 px-3 py-1 text-[10px] font-bold text-[#2563eb]">{tag}</span>
@@ -97,7 +96,6 @@ export default function ShowcasePage() {
 
                 <div className="mt-8 flex items-center gap-3 pt-4 border-t border-slate-100">
                   <a href={project.repo} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0a192f] py-2.5 text-xs font-bold text-white transition hover:bg-slate-800">
-                    {/* Menggunakan GithubIcon*/}
                     <GithubIcon className="size-4" /> Repository
                   </a>
                   <a href={project.link} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-600 transition hover:border-[#2563eb] hover:text-[#2563eb]">

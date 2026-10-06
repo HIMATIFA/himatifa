@@ -42,3 +42,7 @@ body { margin: 0; background: #f4f8fc; font-family: Arial, Helvetica, sans-serif
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @layer base { * { @apply border-border outline-ring/50; } }
+
+@keyframes gradient-move {
+    to { background-position: 200% center; }
+}
