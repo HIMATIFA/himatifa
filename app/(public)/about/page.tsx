@@ -1,83 +1,140 @@
 'use client'
 
+import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
     motion,
     useScroll,
-    useTransform,
     useSpring,
     useReducedMotion,
     type Variants
 } from 'framer-motion'
-import { ArrowLeft, ArrowUp, Target, Rocket, BookOpen, Sparkles, Fingerprint, Copyright, HeartHandshake } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import {
+    ArrowLeft,
+    ArrowUp,
+    Sparkles,
+    Target,
+    ShieldCheck,
+    GraduationCap,
+    Handshake,
+    Wallet,
+    Globe,
+    Megaphone,
+    Lightbulb,
+    Building2,
+    Calendar,
+    Award,
+    Copyright,
+    ArrowRight,
+    Compass
+} from 'lucide-react'
 
 const identities = [
-    { label: "Nama Resmi", value: "Himpunan Mahasiswa Informatika" },
-    { label: "Singkatan", value: "HIMATIFA" },
-    { label: "Universitas", value: "Universitas Muhammadiyah Surabaya" },
-    { label: "Program Studi", value: "Informatika" },
-    { label: "Berdiri", value: "10 Oktober 2020" },
-    { label: "Periode Aktif", value: "2026/2027" },
+    { label: "Nama Resmi", value: "Himpunan Mahasiswa Informatika", icon: Building2 },
+    { label: "Nama Singkat", value: "HIMATIFA", icon: Award },
+    { label: "Institusi", value: "Universitas Muhammadiyah Surabaya", icon: Building2 },
+    { label: "Program Studi", value: "S1 Informatika", icon: GraduationCap },
+    { label: "Tanggal Berdiri", value: "10 Oktober 2020", icon: Calendar },
+    { label: "Periode Kepengurusan", value: "2026 / 2027", icon: ShieldCheck },
 ]
 
 const missions = [
-    "Memperkuat internal organisasi sebagai fondasi keberlangsungan HIMATIFA.",
-    "Meningkatkan kompetensi mahasiswa Informatika melalui program pengembangan terstruktur.",
-    "Membangun komunikasi yang baik dengan dosen sebagai mitra akademik.",
-    "Mengelola keuangan secara mandiri dan produktif untuk mendukung setiap program kerja.",
-    "Memperluas relasi eksternal untuk membuka peluang kolaborasi dan jejaring.",
-    "Memperkuat branding HIMATIFA sebagai identitas yang dikenal dan dipercaya.",
-    "Menjadikan HIMATIFA sebagai wadah aspirasi, inovasi, kreativitas, dan peluang bagi seluruh mahasiswa."
+    {
+        number: "01",
+        category: "Tata Kelola Internal",
+        title: "Fondasi Organisasi Kokoh",
+        desc: "Memperkuat soliditas dan manajemen internal organisasi sebagai fondasi keberlanjutan roda kepengurusan HIMATIFA.",
+        icon: ShieldCheck,
+    },
+    {
+        number: "02",
+        category: "Kapasitas Mahasiswa",
+        title: "Pengembangan Kompetensi",
+        desc: "Meningkatkan kemampuan teknikal dan soft skills mahasiswa Informatika melalui program pelatihan, bootcamp, dan study club terstruktur.",
+        icon: GraduationCap,
+    },
+    {
+        number: "03",
+        category: "Kemitraan Akademik",
+        title: "Sinergi Dosen & Kampus",
+        desc: "Membangun komunikasi konstruktif dengan jajaran dosen dan program studi sebagai mitra strategis dalam pengembangan akademik.",
+        icon: Handshake,
+    },
+    {
+        number: "04",
+        category: "Kemandirian Finansial",
+        title: "Pengelolaan Produktif",
+        desc: "Mengelola keuangan secara mandiri, transparan, dan produktif melalui divisi ekonomi kreatif untuk menopang agenda kerja.",
+        icon: Wallet,
+    },
+    {
+        number: "05",
+        category: "Jejaring Eksternal",
+        title: "Relasi & Kolaborasi Industri",
+        desc: "Memperluas kemitraan strategis dengan organisasi kemahasiswaan lain, komunitas teknologi, dan mitra industri profesional.",
+        icon: Globe,
+    },
+    {
+        number: "06",
+        category: "Komunikasi Publik",
+        title: "Penguatan Citra & Branding",
+        desc: "Membangun citra positif HIMATIFA sebagai wadah mahasiswa yang progresif, relevan, dan terpercaya di ranah digital.",
+        icon: Megaphone,
+    },
+    {
+        number: "07",
+        category: "Pemberdayaan Mahasiswa",
+        title: "Inkubasi Aspirasi & Karya",
+        desc: "Menjadikan himpunan sebagai rumah yang responsif terhadap aspirasi, kreativitas, inovasi, serta peluang bagi seluruh anggota.",
+        icon: Lightbulb,
+    },
 ]
 
 const filosofiLogo = [
     {
-        image: "logo_3.png",
-        title: "10 Cabang Sirkuit",
-        description: "Jumlah sepuluh cabang yang mengelilingi melambangkan tanggal kelahiran HIMATIFA yaitu 10 Oktober 2020. Banyaknya cabang ini juga bermaksud bahwa seluruh mahasiswa dalam himpunan berasal dari latar belakang yang berbeda-beda."
-    },
-    {
-        image: "logo_4.png",
-        title: "Tulisan Melingkar",
-        description: "Tulisan yang dibuat mengelilingi logo bertujuan agar seluruh anggota terus bergandengan tangan dan bersatu agar kuat dalam menjalankan roda organisasi."
-    },
-    {
-        image: "logo_2.png",
-        title: "Lingkaran & Dua Garis",
-        description: "Lingkaran putih besar di luar bermakna HIMATIFA adalah himpunan yang baru lahir, masih putih, dan bersih. Lingkaran kecil di dalam menandakan lingkup jurusan Informatika, sedangkan dua garis di dalamnya melambangkan 2 kalimat syahadat."
-    },
-    {
-        image: "logo_1.png",
+        image: "/logo_1.png",
         title: "Microchip Processor",
-        description: "Melambangkan pola pikir di dalam jurusan Informatika yang selalu berada di paling terdepan dalam inovasi dan perkembangan teknologi."
+        badge: "Pola Pikir & Inovasi",
+        description: "Melambangkan pola pikir dan gerak mahasiswa Informatika yang selalu berada di garda terdepan dalam inovasi, adaptasi teknologi, dan pemecahan masalah secara logis."
     },
     {
-        image: "logo_5.png",
-        title: "Logo Muhammadiyah",
-        description: "Terletak di bagian tengah yang melambangkan bahwa HIMATIFA berada dan bernaung di bawah lingkup Universitas Muhammadiyah Surabaya."
+        image: "/logo_2.png",
+        title: "Lingkaran & Dua Garis",
+        badge: "Fondasi & Integritas",
+        description: "Lingkaran luar bermakna awal kelahiran himpunan yang bersih dan tulus. Lingkaran dalam melambangkan ranah Informatika, diapit dua garis yang mencerminkan keteguhan memegang dua kalimat syahadat."
+    },
+    {
+        image: "/logo_3.png",
+        title: "10 Cabang Sirkuit",
+        badge: "Sejarah & Keberagaman",
+        description: "Sepuluh cabang merepresentasikan tanggal berdirinya HIMATIFA pada 10 Oktober 2020, sekaligus mengilustrasikan keberagaman latar belakang mahasiswa yang terintegrasi dalam satu harmoni gerak."
+    },
+    {
+        image: "/logo_4.png",
+        title: "Tipografi Melingkar",
+        badge: "Solidaritas Bersatu",
+        description: "Tulisan yang melingkar secara utuh menggambarkan komitmen seluruh fungsionaris dan anggota untuk senantiasa bergandengan tangan, saling mendukung, dan kuat menghadapi dinamika zaman."
+    },
+    {
+        image: "/logo_5.png",
+        title: "Matahari Muhammadiyah",
+        badge: "Identitas & Nilai Luhur",
+        description: "Terletak di poros tengah lambang, menegaskan bahwa HIMATIFA tumbuh dan bernaung di bawah naungan Universitas Muhammadiyah Surabaya dengan membawa misi pencerahan dan kemaslahatan."
     }
 ]
 
 const container: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+    show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 }
 
 const reveal: Variants = {
-    hidden: { opacity: 0, y: 40, filter: 'blur(6px)' },
+    hidden: { opacity: 0, y: 24 },
     show: {
-        opacity: 1, y: 0, filter: 'blur(0px)',
-        transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-    },
-}
-
-const listItem: Variants = {
-    hidden: { opacity: 0, x: -24 },
-    show: {
-        opacity: 1, x: 0,
-        transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
     },
 }
 
@@ -86,281 +143,399 @@ function BackToTop() {
     const reduce = useReducedMotion()
 
     useEffect(() => {
-        const onScroll = () => setVisible(window.scrollY > 500)
+        const onScroll = () => setVisible(window.scrollY > 400)
         window.addEventListener('scroll', onScroll, { passive: true })
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
 
+    if (!visible) return null
+
     return (
         <motion.button
-            initial={false}
-            animate={visible ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.6, y: 20 }}
-            whileHover={reduce ? undefined : { y: -3 }}
-            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={reduce ? undefined : { y: -2 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="Kembali ke atas"
-            className="fixed bottom-6 right-6 z-50 grid size-12 place-items-center rounded-full bg-[#2563eb] text-white shadow-xl shadow-blue-600/30 transition-colors hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+            className="fixed bottom-6 right-6 z-50 grid size-11 place-items-center rounded-full bg-[#2563eb] text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-600 cursor-pointer"
         >
-            <ArrowUp className="size-5" />
+            <ArrowUp className="size-4.5" />
         </motion.button>
     )
 }
 
 export default function AboutPage() {
-    const reduce = useReducedMotion()
-
     const { scrollYProgress } = useScroll()
     const progressScale = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 })
-
-    const logoRef = useRef<HTMLDivElement>(null)
-    const { scrollYProgress: logoProgress } = useScroll({ target: logoRef, offset: ['start end', 'end start'] })
-    const logoRotate = useTransform(logoProgress, [0, 1], [-6, 6])
+    const logoSectionRef = useRef<HTMLDivElement>(null)
 
     return (
-        <main className="relative min-h-screen overflow-hidden bg-slate-50 px-4 py-12 text-[#0a192f] sm:px-6 lg:px-10 lg:py-20">
+        <main className="relative min-h-screen bg-[#f8fafc] text-[#0a192f] antialiased selection:bg-blue-100 selection:text-blue-900">
             <motion.div
                 style={{ scaleX: progressScale }}
                 className="fixed inset-x-0 top-0 z-[60] h-1 origin-left bg-gradient-to-r from-[#2563eb] via-sky-400 to-cyan-400"
                 aria-hidden
             />
 
-            <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]" />
-            <div className="absolute left-[-10%] top-[-5%] -z-10 size-[500px] rounded-full bg-blue-400/20 blur-[120px]" />
-            <div className="absolute right-[-5%] top-[20%] -z-10 size-[600px] rounded-full bg-cyan-300/15 blur-[150px]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-96 overflow-hidden">
+                <div className="absolute left-1/2 -top-40 -translate-x-1/2 size-[650px] rounded-full bg-gradient-to-b from-blue-100/70 via-indigo-50/40 to-transparent blur-3xl" />
+            </div>
 
-            <div className="relative z-10 mx-auto max-w-6xl">
-                <motion.div
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                >
+            <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-6">
                     <Link
                         href="/"
-                        className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/50 px-4 py-2 text-xs font-bold text-slate-500 backdrop-blur-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-[#2563eb]"
+                        className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-all hover:border-blue-300 hover:bg-blue-50/50 hover:text-[#2563eb]"
                     >
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-                        Kembali ke Beranda
+                        <span>Kembali ke Beranda</span>
                     </Link>
-                </motion.div>
+
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                        <Link href="/" className="hover:text-slate-900 transition-colors">
+                            HIMATIFA
+                        </Link>
+                        <span>/</span>
+                        <span className="font-semibold text-[#2563eb]">Profil Organisasi</span>
+                    </div>
+                </div>
 
                 <motion.div
-                    initial="hidden" animate="show" variants={container}
-                    className="mb-16 mt-12 text-center"
+                    initial="hidden"
+                    animate="show"
+                    variants={container}
+                    className="mt-12 text-center sm:mt-16"
                 >
-                    <motion.p
-                        variants={reveal}
-                        className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]"
-                    >
-                        Profil HIMATIFA
-                    </motion.p>
+                    <motion.div variants={reveal} className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#2563eb]">
+                        <span>Profil & Visi Misi Resmi</span>
+                    </motion.div>
+
                     <motion.h1
                         variants={reveal}
-                        className="text-4xl font-black tracking-tight sm:text-6xl"
+                        className="mt-4 text-3xl font-black tracking-tight text-[#0a192f] sm:text-5xl lg:text-6xl"
                     >
-                        Mengenal{' '}
-                        <span className="relative inline-block bg-gradient-to-r from-[#2563eb] via-sky-400 to-[#2563eb] bg-[length:200%_auto] bg-clip-text text-transparent animate-[gradient-move_4s_linear_infinite]">
-                            Himpunan Kami.
-                            <svg aria-hidden className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 12" fill="none">
-                                <path d="M2 9C50 3 150 3 198 9" stroke="#2563eb" strokeWidth="4" strokeLinecap="round" opacity="0.4" />
-                            </svg>
+                        Mengenal Lebih Dekat{' '}
+                        <span className="bg-gradient-to-r from-[#2563eb] to-sky-500 bg-clip-text text-transparent">
+                            HIMATIFA.
                         </span>
                     </motion.h1>
-                    <motion.div variants={container} className="mx-auto mt-6 max-w-3xl space-y-4 text-[15px] leading-relaxed text-slate-500">
-                        <motion.p variants={reveal}>
-                            HIMATIFA (Himpunan Mahasiswa Teknik Informatika) adalah organisasi kemahasiswaan resmi yang menaungi seluruh mahasiswa Program Studi Teknik Informatika di Universitas Muhammadiyah Surabaya.
-                        </motion.p>
-                        <motion.p variants={reveal}>
-                            Sebagai wadah aspirasi dan kreativitas, HIMATIFA berperan menjembatani mahasiswa dengan pihak kampus, mengembangkan kompetensi di bidang teknologi informasi, serta membangun jaringan yang luas baik di tingkat internal maupun eksternal. HIMATIFA menjadi rumah bagi mahasiswa Informatika UMSURA untuk tumbuh, berkarya, dan berkompetisi.
-                        </motion.p>
-                    </motion.div>
+
+                    <motion.p
+                        variants={reveal}
+                        className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg"
+                    >
+                        Himpunan Mahasiswa Informatika Universitas Muhammadiyah Surabaya adalah ruang tumbuh kolaboratif yang menaungi aspirasi, karya teknologi, dan pembinaan karakter insan akademis.
+                    </motion.p>
                 </motion.div>
 
                 <motion.div
-                    initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: '-60px' }}
                     variants={container}
-                    className="grid gap-8 lg:grid-cols-[1.5fr_1fr]"
+                    className="mt-14 grid gap-6 lg:grid-cols-12 lg:items-stretch"
                 >
-                    <div className="flex flex-col gap-6">
-                        <motion.div variants={reveal}>
-                            <div className="group relative overflow-hidden rounded-[2.5rem] bg-[#071426] p-8 text-white shadow-2xl transition-transform duration-500 hover:-translate-y-1 lg:p-10">
-                                <div aria-hidden className="absolute -right-10 -top-10 size-40 rounded-full bg-blue-500/20 blur-3xl transition-all duration-500 group-hover:bg-blue-500/30 group-hover:scale-125" />
-                                <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/60 to-transparent" />
-                                <div className="relative z-10">
-                                    <div className="mb-6 flex items-center gap-4">
-                                        <div className="grid size-12 place-items-center rounded-2xl bg-white/10 text-blue-300 backdrop-blur-sm ring-1 ring-white/20 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
-                                            <Target className="size-6" />
-                                        </div>
-                                        <h2 className="text-3xl font-black tracking-tight">Visi Kami</h2>
-                                    </div>
-                                    <motion.blockquote
-                                        initial={{ opacity: 0 }}
-                                        whileInView={{ opacity: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: 0.3, duration: 0.8 }}
-                                        className="relative border-l-4 border-blue-500/50 pl-5 text-[16px] font-medium italic leading-relaxed text-blue-100/80"
-                                    >
-                                        "Menjadikan HIMATIFA sebagai organisasi mahasiswa Informatika yang unggul, solid, dan berdaya saing dalam pengembangan aspirasi, kreativitas, dan kompetensi mahasiswa."
-                                    </motion.blockquote>
+                    <motion.div variants={reveal} className="lg:col-span-7">
+                        <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-slate-800 bg-[#0c1f38] p-8 text-white shadow-xl sm:p-10">
+                            <div
+                                aria-hidden
+                                className="pointer-events-none absolute -bottom-20 -right-20 size-60 rounded-full bg-blue-500/20 blur-3xl"
+                            />
+
+                            <div>
+                                <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-blue-300">
+                                    <span>Visi Kepengurusan</span>
+                                </div>
+
+                                <blockquote className="mt-6 text-xl font-bold leading-relaxed tracking-tight text-white sm:text-2xl lg:text-3xl">
+                                    &ldquo;Menjadikan HIMATIFA sebagai organisasi mahasiswa Informatika yang unggul, solid, dan berdaya saing dalam pengembangan aspirasi, kreativitas, dan kompetensi mahasiswa.&rdquo;
+                                </blockquote>
+
+                                <p className="mt-4 text-sm leading-relaxed text-slate-300">
+                                    Berkomitmen menghadirkan ekosistem yang sehat bagi mahasiswa untuk mengasah nalar kritis, keterampilan teknis, dan kepekaan sosial dalam menjawab tantangan era digital.
+                                </p>
+                            </div>
+
+                            <div className="mt-8 border-t border-slate-700/60 pt-6">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                                    Tiga Pilar Utama Visi:
+                                </span>
+                                <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-blue-100">
+                                    <span className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5">
+                                        1. Keunggulan Akademis & Praktis
+                                    </span>
+                                    <span className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5">
+                                        2. Soliditas Kekeluargaan
+                                    </span>
+                                    <span className="rounded-lg bg-white/5 border border-white/10 px-3 py-1.5">
+                                        3. Daya Saing Kompetitif
+                                    </span>
                                 </div>
                             </div>
-                        </motion.div>
-
-                        <motion.div variants={reveal}>
-                            <div className="flex flex-col justify-center rounded-[2.5rem] border border-white/80 bg-white/70 p-8 shadow-xl shadow-blue-900/5 backdrop-blur-xl transition-all duration-500 hover:border-blue-200/50 hover:shadow-2xl hover:shadow-blue-900/10 lg:p-10">
-                                <div className="mb-8 flex items-center gap-4">
-                                    <div className="grid size-12 place-items-center rounded-2xl bg-blue-100 text-[#2563eb] transition-transform duration-300 hover:scale-110 hover:-rotate-6">
-                                        <Rocket className="size-6" />
-                                    </div>
-                                    <h2 className="text-3xl font-black tracking-tight text-[#0a192f]">Misi Utama</h2>
-                                </div>
-                                <motion.ul
-                                    initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}
-                                    variants={container}
-                                    className="relative flex flex-col gap-5"
-                                >
-                                    <span aria-hidden className="absolute bottom-4 left-[11px] top-4 w-px bg-gradient-to-b from-blue-200 via-blue-300 to-transparent" />
-                                    {missions.map((misi, idx) => (
-                                        <motion.li key={idx} variants={listItem} className="group relative flex items-start gap-4">
-                                            <span className="relative z-10 mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-blue-50 text-[10px] font-black text-[#2563eb] ring-1 ring-blue-100 transition-all duration-300 group-hover:bg-[#2563eb] group-hover:text-white group-hover:ring-blue-500 group-hover:shadow-md group-hover:shadow-blue-500/30">
-                                                {idx + 1}
-                                            </span>
-                                            <span className="text-[14.5px] leading-relaxed text-slate-600 transition-colors group-hover:text-[#0a192f]">
-                                                {misi}
-                                            </span>
-                                        </motion.li>
-                                    ))}
-                                </motion.ul>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    <motion.div variants={reveal} className="flex flex-col gap-6">
-                        <div className="group relative flex flex-col items-center overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/70 p-10 text-center shadow-xl shadow-blue-900/5 backdrop-blur-xl transition-all duration-500 hover:border-blue-200/50 hover:shadow-2xl">
-                            <div aria-hidden className="pointer-events-none absolute -top-16 left-1/2 size-64 -translate-x-1/2 rounded-full bg-blue-400/15 blur-[60px] transition-opacity duration-500 group-hover:opacity-100" />
-                            <div className="relative mb-6 flex items-center justify-center">
-                                <Image
-                                    src="/logo.png"
-                                    alt="Logo HIMATIFA"
-                                    width={120}
-                                    height={120}
-                                    className="relative object-contain transition-transform duration-500 group-hover:scale-110"
-                                />
-                            </div>
-                            <h3 className="text-2xl font-black text-[#0a192f]">HIMATIFA</h3>
-                            <p className="mt-1 text-xs font-black uppercase tracking-widest text-[#2563eb]">UMSURA</p>
                         </div>
-                        <div className="flex flex-col rounded-[2.5rem] border border-white/80 bg-white/70 p-8 shadow-xl shadow-blue-900/5 backdrop-blur-xl transition-all duration-500 hover:border-blue-200/50 hover:shadow-2xl lg:p-10">
-                            <div className="mb-6 flex items-center gap-3 border-b border-slate-200/60 pb-5">
-                                <div className="grid size-9 place-items-center rounded-xl bg-blue-100 text-[#2563eb]">
-                                    <BookOpen className="size-4.5" />
-                                </div>
-                                <h3 className="text-lg font-extrabold text-[#0a192f]">Identitas Organisasi</h3>
-                            </div>
-                            <dl className="flex flex-col gap-5">
-                                {identities.map((row) => (
-                                    <div key={row.label} className="group -mx-2 flex items-baseline justify-between gap-4 rounded-xl px-2 py-1 transition-colors hover:bg-blue-50/60">
-                                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-400 transition-colors group-hover:text-[#2563eb]">
-                                            {row.label}
-                                        </dt>
-                                        <dd className="text-right text-sm font-semibold text-slate-700">
-                                            {row.value}
-                                        </dd>
+                    </motion.div>
+
+                    <motion.div variants={reveal} className="lg:col-span-5">
+                        <div className="flex h-full flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm sm:p-8">
+                            <div>
+                                <div className="flex items-center gap-3.5 border-b border-slate-100 pb-5">
+                                    <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-50 border border-blue-100">
+                                        <Image
+                                            src="/logo.png"
+                                            alt="Logo HIMATIFA"
+                                            width={36}
+                                            height={36}
+                                            className="object-contain"
+                                        />
                                     </div>
-                                ))}
-                            </dl>
+                                    <div>
+                                        <h2 className="text-lg font-bold text-[#0a192f]">Identitas Organisasi</h2>
+                                        <p className="text-xs font-medium text-slate-500">Legalitas & data institusional</p>
+                                    </div>
+                                </div>
+
+                                <dl className="mt-5 divide-y divide-slate-100">
+                                    {identities.map((item) => {
+                                        const Icon = item.icon
+                                        return (
+                                            <div key={item.label} className="flex items-center justify-between py-2.5 text-xs sm:text-sm">
+                                                <dt className="flex items-center gap-2 text-slate-500">
+                                                    <Icon className="size-3.5 text-slate-400" />
+                                                    <span>{item.label}</span>
+                                                </dt>
+                                                <dd className="font-semibold text-slate-900 text-right">
+                                                    {item.value}
+                                                </dd>
+                                            </div>
+                                        )
+                                    })}
+                                </dl>
+                            </div>
+
+                            <div className="mt-6 rounded-2xl bg-slate-50 p-4 border border-slate-100 text-xs text-slate-600">
+                                <span className="font-bold text-[#0a192f] block mb-1">Sekretariat Resmi:</span>
+                                Gedung G Lantai 3, Fakultas Teknik Universitas Muhammadiyah Surabaya, Jl. Sutorejo No. 59, Surabaya.
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>
 
-                <motion.div
-                    initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}
-                    variants={reveal}
-                    className="mt-16 rounded-[3rem] border border-white/80 bg-white/50 p-8 shadow-xl shadow-blue-900/5 backdrop-blur-2xl lg:p-12"
-                >
-                    <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.5fr] lg:gap-16">
-                        <div ref={logoRef} className="relative mx-auto w-full max-w-sm lg:sticky lg:top-24">
-                            <div ref={logoRef} className="relative mx-auto w-full max-w-sm lg:sticky lg:top-24">
+                <section className="mt-20">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, margin: '-60px' }}
+                        variants={container}
+                        className="text-center"
+                    >
+                        <motion.div variants={reveal} className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#2563eb]">
+                            <span>Misi & Arah Pergerakan</span>
+                        </motion.div>
+                        <motion.h2
+                            variants={reveal}
+                            className="mt-3 text-3xl font-black tracking-tight text-[#0a192f] sm:text-4xl"
+                        >
+                            7 Misi Strategis Organisasi
+                        </motion.h2>
+                        <motion.p
+                            variants={reveal}
+                            className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base"
+                        >
+                            Panduan operasional dan peta jalan komprehensif dalam merealisasikan program kerja yang berdampak nyata.
+                        </motion.p>
+                    </motion.div>
+
+                    <motion.div
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, margin: '-40px' }}
+                        variants={container}
+                        className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    >
+                        {missions.map((misi) => {
+                            const Icon = misi.icon
+                            return (
                                 <motion.div
-                                    style={reduce ? undefined : { rotate: logoRotate }}
-                                    className="relative grid aspect-square place-items-center rounded-[3rem] border border-white bg-transparent p-8"
+                                    key={misi.number}
+                                    variants={reveal}
+                                    className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
                                 >
-                                    <div aria-hidden className="absolute inset-3 rounded-[2.5rem] bg-[conic-gradient(from_180deg,transparent_0%,rgba(37,99,235,0.08)_25%,transparent_50%,rgba(56,189,248,0.08)_75%,transparent_100%)]" />
+                                    <div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="grid size-10 place-items-center rounded-xl bg-blue-50 text-[#2563eb] border border-blue-100 transition-colors group-hover:bg-[#2563eb] group-hover:text-white">
+                                                <Icon className="size-4.5" />
+                                            </div>
+                                            <span className="text-xl font-black text-slate-200 group-hover:text-blue-200 transition-colors">
+                                                {misi.number}
+                                            </span>
+                                        </div>
+
+                                        <span className="mt-4 inline-block text-[11px] font-bold uppercase tracking-wider text-[#2563eb]">
+                                            {misi.category}
+                                        </span>
+
+                                        <h3 className="mt-1 text-base font-bold text-[#0a192f]">
+                                            {misi.title}
+                                        </h3>
+
+                                        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                                            {misi.desc}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )
+                        })}
+                    </motion.div>
+                </section>
+
+                <section ref={logoSectionRef} className="mt-24 scroll-mt-20">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, margin: '-60px' }}
+                        variants={container}
+                        className="text-center"
+                    >
+                        <motion.div variants={reveal} className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#2563eb]">
+                            <span>Identitas Visual</span>
+                        </motion.div>
+                        <motion.h2
+                            variants={reveal}
+                            className="mt-3 text-3xl font-black tracking-tight text-[#0a192f] sm:text-4xl"
+                        >
+                            Filosofi Lambang HIMATIFA
+                        </motion.h2>
+                        <motion.p
+                            variants={reveal}
+                            className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-600 sm:text-base"
+                        >
+                            Setiap lekuk garis dan elemen visual dalam lambang memiliki makna filosofis yang merefleksikan identitas, sejarah, dan nilai luhur organisasi.
+                        </motion.p>
+                    </motion.div>
+
+                    <div className="mt-12 grid gap-8 lg:grid-cols-12 lg:items-start">
+                        <div className="lg:col-span-5 lg:sticky lg:top-24">
+                            <div className="overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-8 text-center shadow-sm">
+                                <div className="relative mx-auto flex size-52 items-center justify-center rounded-3xl bg-slate-50 border border-slate-100 p-6">
                                     <Image
                                         src="/logo.png"
-                                        alt="Logo Utama HIMATIFA"
-                                        width={260}
-                                        height={260}
-                                        className="object-contain transition-transform duration-700 hover:scale-105"
+                                        alt="Lambang Lengkap HIMATIFA"
+                                        width={180}
+                                        height={180}
+                                        className="object-contain transition-transform duration-500 hover:scale-105"
+                                        priority
                                     />
-                                </motion.div>
+                                </div>
+
+                                <h3 className="mt-6 text-xl font-extrabold text-[#0a192f]">
+                                    Lambang Resmi HIMATIFA
+                                </h3>
+                                <p className="mt-1 text-xs font-semibold text-slate-500">
+                                    Ditetapkan sejak 10 Oktober 2020
+                                </p>
+
+                                <div className="mt-6 rounded-2xl bg-blue-50/70 p-4 border border-blue-100 text-left text-xs leading-relaxed text-slate-600">
+                                    <p className="font-bold text-[#2563eb] mb-1">Prinsip Desain:</p>
+                                    Kesatuan simbol sirkuit digital dan lambang persyarikatan merepresentasikan harmonisasi keilmuan teknologi komputasi dengan nilai-nilai akhlakul karimah.
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <motion.div variants={container} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-10">
-                                <motion.p variants={reveal} className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">
-                                    Makna Lambang
-                                </motion.p>
-                                <motion.h2 variants={reveal} className="text-3xl font-black tracking-tight sm:text-4xl">
-                                    Arti di Balik <span className="bg-gradient-to-r from-[#2563eb] to-sky-400 bg-clip-text text-transparent">Lambang HIMATIFA.</span>
-                                </motion.h2>
-                                <motion.p variants={reveal} className="mt-4 text-[15px] leading-relaxed text-slate-500">
-                                    Setiap elemen visual dalam lambang HIMATIFA memiliki makna filosofis yang mendalam, menggambarkan sejarah, komitmen, dan identitas organisasi.
-                                </motion.p>
-                            </motion.div>
-
-                            <motion.ol
-                                initial="hidden" whileInView="show" viewport={{ once: true, margin: '-40px' }}
-                                variants={container}
-                                className="relative flex flex-col gap-6"
-                            >
-                                <span aria-hidden className="absolute bottom-6 left-[31px] top-2 w-px bg-gradient-to-b from-blue-200 via-blue-300 to-transparent" />
-                                {filosofiLogo.map((item, i) => (
-                                    <motion.li key={item.title} variants={listItem} className="group relative flex gap-5">
-                                        <span className="relative z-10 grid size-16 shrink-0 place-items-center">
+                        <div className="flex flex-col gap-4 lg:col-span-7">
+                            {filosofiLogo.map((item, idx) => (
+                                <motion.div
+                                    key={item.title}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4, delay: idx * 0.08 }}
+                                    className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all duration-300 hover:border-blue-300 hover:shadow-sm sm:p-6"
+                                >
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                                        <div className="grid size-16 shrink-0 place-items-center rounded-2xl border border-slate-100 bg-slate-50 p-2.5 transition-transform duration-300 group-hover:scale-105 group-hover:bg-blue-50">
                                             <Image
                                                 src={item.image}
                                                 alt={item.title}
-                                                width={56}
-                                                height={56}
-                                                className="size-14 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+                                                width={48}
+                                                height={48}
+                                                className="size-12 object-contain"
                                             />
-                                         </span>
+                                        </div>
 
-                                        <div className="rounded-2xl border border-transparent p-4 -m-4 transition-all duration-300 group-hover:border-white group-hover:bg-white/60 group-hover:shadow-lg group-hover:shadow-blue-900/5">
-                                            <div className="flex items-center gap-2.5">
-                                                <h3 className="text-lg font-extrabold text-[#0a192f] transition-colors group-hover:text-[#2563eb]">
+                                        <div className="flex-1">
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <h4 className="text-base font-bold text-[#0a192f] transition-colors group-hover:text-[#2563eb]">
                                                     {item.title}
-                                                </h3>
-                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-black text-[#2563eb] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                                                    0{i + 1}
+                                                </h4>
+                                                <span className="rounded-md bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-[#2563eb] border border-blue-100">
+                                                    {item.badge}
                                                 </span>
                                             </div>
                                             <p className="mt-2 text-sm leading-relaxed text-slate-600">
                                                 {item.description}
                                             </p>
                                         </div>
-                                    </motion.li>
-                                ))}
-                            </motion.ol>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
+                    </div>
+                </section>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="mt-20 rounded-3xl border border-slate-800 bg-[#071426] p-8 text-white shadow-xl sm:p-10 lg:flex lg:items-center lg:justify-between"
+                >
+                    <div className="max-w-xl">
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                            Terhubung Bersama Kami
+                        </span>
+                        <h3 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl text-white">
+                            Siap Bersinergi & Menciptakan Dampak Nyata?
+                        </h3>
+                        <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                            Buka ruang diskusi, sampaikan gagasan kolaborasi, atau ikuti kegiatan pengembangan mahasiswa terkini.
+                        </p>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3 lg:mt-0">
+                        <Link
+                            href="/events"
+                            className="inline-flex items-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-blue-500"
+                        >
+                            <span>Jelajahi Agenda</span>
+                            <ArrowRight className="size-4" />
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-white/5 px-5 py-3 text-xs font-bold text-white transition-all hover:bg-white/10"
+                        >
+                            <span>Hubungi Pengurus</span>
+                        </Link>
                     </div>
                 </motion.div>
 
-                <motion.footer
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                    className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200/60 pb-4 pt-8 sm:flex-row"
-                >
-                    <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                        <Copyright className="size-3.5" /> 2026 HIMATIFA UMSURA
+                <footer className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 pt-8 pb-4 text-xs font-medium text-slate-500 sm:flex-row">
+                    <p className="flex items-center gap-1.5">
+                        <Copyright className="size-3.5" /> {new Date().getFullYear()} HIMATIFA Universitas Muhammadiyah Surabaya.
                     </p>
-                    <p className="flex items-center gap-1.5 text-xs text-slate-400">
-                        Created by MEDKOMINFO
-                    </p>
-                </motion.footer>
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="hover:text-blue-600 transition-colors">
+                            Beranda
+                        </Link>
+                        <Link href="/news" className="hover:text-blue-600 transition-colors">
+                            Berita
+                        </Link>
+                        <Link href="/contact" className="hover:text-blue-600 transition-colors">
+                            Kontak
+                        </Link>
+                    </div>
+                </footer>
             </div>
 
             <BackToTop />
