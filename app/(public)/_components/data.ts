@@ -16,12 +16,12 @@ export const departments: Record<DepartmentKey, DepartmentDetail> = {
         programs: ['Study Club', 'Mentoring Akademik', 'Upgrading']
     },
     Deplu: {
-        label: 'Departemen Luar Negeri',
+        label: 'Luar Negeri',
         desc: 'Membuka jejaring kolaborasi strategis antara HIMATIFA, organisasi mahasiswa, dan mitra profesional di luar kampus.',
         programs: ['Company Visit', 'Collaboration', 'Networking']
     },
     Kepsos: {
-        label: 'Kesejahteraan Sosial',
+        label: 'Kepedulian Sosial',
         desc: 'Menghadirkan dampak positif melalui aksi sosial dan kepedulian yang berkelanjutan bagi civitas dan masyarakat.',
         programs: ['HIMATIFA Care', 'Donasi Digital', 'Volunteer']
     },
@@ -82,7 +82,7 @@ export const newsData = [
     }
 ]
 
-export const MISI = [
+export const misi = [
     {
         title: 'Kolaborasi Lintas Minat',
         desc: 'Menghubungkan mahasiswa lintas bidang untuk proyek, riset, dan eksplorasi teknologi bersama.',
@@ -100,20 +100,20 @@ export const MISI = [
     },
 ]
 
-export const STATS = [
+export const stats = [
     { val: 2020, label: 'Tahun Berdiri', suffix: '', isYear: true, subtext: 'Dedikasi membangun talenta' },
     { val: 5, label: 'Departemen', suffix: '', subtext: 'Fokus pilar pergerakan' },
     { val: 15, label: 'Program Kerja', suffix: '+', subtext: 'Aktif berkelanjutan' },
     { val: 500, label: 'Mahasiswa Aktif', suffix: '+', subtext: 'Komunitas solid & suportif' },
 ]
 
-export const AGENDA = [
+export const agenda = [
     { date: '21', month: 'SEP', title: 'OSCAR 2026', desc: 'Opening Student Collaboration & Achievement Recognition', place: 'Auditorium UMSurabaya' },
     { date: '04', month: 'OKT', title: 'Study Club GitHub', desc: 'Level up your workflow, one commit at a time.', place: 'Lab Informatika 2' },
     { date: '18', month: 'OKT', title: 'HIMATIFA Care', desc: 'Berbagi langkah kecil, memberi dampak yang besar.', place: 'Kampung Nelayan Kenjeran' },
 ]
 
-export const SOCIALS = [
+export const socials = [
     { label: 'Instagram', href: 'https://instagram.com/himatifa_umsurabaya', icon: FaInstagram },
     { label: 'GitHub', href: 'https://github.com/himatifa', icon: FaGithub },
     { label: 'YouTube', href: 'https://youtube.com/@himatifa', icon: FaYoutube },

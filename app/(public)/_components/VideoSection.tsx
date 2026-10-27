@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Play, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react'
-import { reveal } from './data'
+import {reveal, revealStagger} from './data'
 
 export function VideoSection() {
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -43,9 +43,6 @@ export function VideoSection() {
         <section id="video-profil" className="relative mx-auto max-w-7xl px-6 pb-24 lg:px-10">
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={reveal}>
                 <div className="mb-12 text-center">
-                    <p className="mb-3 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">
-                        <Sparkles className="size-3.5" /> Mengenal Lebih Dekat
-                    </p>
                     <h2 className="text-4xl font-black tracking-tight sm:text-5xl text-[#0a192f]">
                         Video Profil <br />
                         <span className="bg-gradient-to-r from-[#2563eb] to-sky-400 bg-clip-text text-transparent">

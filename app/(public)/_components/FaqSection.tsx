@@ -14,59 +14,61 @@ export function FaqSection() {
     }
 
     return (
-        <section id="faq" className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
-            <div className="mb-14 text-center">
-                <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">
-                    Pertanyaan Umum
-                </p>
-                <h2 className="text-4xl font-black tracking-tight text-[#0a192f] sm:text-5xl">
-                    Sering{' '}
-                    <span className="bg-gradient-to-r from-[#2563eb] to-sky-400 bg-clip-text text-transparent">
-                        Ditanyakan.
+        <section id="faq" className="relative mx-auto max-w-7xl scroll-mt-24 px-4 sm:px-6 py-20 lg:px-8 lg:py-28">
+            <div className="mb-10 sm:mb-14 max-w-3xl">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                    <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                        Pertanyaan Umum
                     </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                    Sering <span className="text-blue-600">Ditanyakan</span>
                 </h2>
-                <p className="mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed text-slate-500">
-                    Punya pertanyaan seputar HIMATIFA, kegiatan kampus, atau ingin menyampaikan keluhan? Temukan jawabannya di bawah ini.
+                <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                    Punya pertanyaan seputar HIMATIFA UMSURA, kegiatan kampus, atau ingin menyampaikan keluhan? Temukan jawabannya di bawah ini.
                 </p>
             </div>
 
-            <div className="mx-auto max-w-3xl space-y-4">
+            <div className="mx-auto max-w-3xl space-y-3.5">
                 {faqData.map((item, index) => {
                     const isOpen = openIndex === index
 
                     return (
                         <motion.div
                             key={item.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 16 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-40px' }}
-                            transition={{ delay: index * 0.08, duration: 0.5 }}
-                            className={`overflow-hidden rounded-[1.5rem] border transition-all duration-300 ${
+                            transition={{ delay: index * 0.08, duration: 0.4, ease: 'easeOut' }}
+                            className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
                                 isOpen
-                                    ? 'border-blue-200 bg-white/90 shadow-xl shadow-blue-900/5 backdrop-blur-xl'
-                                    : 'border-white/80 bg-white/60 shadow-md shadow-blue-900/5 backdrop-blur-xl hover:bg-white/80'
+                                    ? 'border-blue-300 bg-white shadow-md'
+                                    : 'border-slate-200 bg-white shadow-sm hover:border-slate-300'
                             }`}
                         >
                             <button
                                 onClick={() => toggleFAQ(index)}
-                                className="flex w-full items-center justify-between gap-4 p-6 text-left transition-colors"
+                                className="flex w-full items-center justify-between gap-4 p-5 sm:p-6 text-left transition-colors"
                                 aria-expanded={isOpen}
                             >
                                 <div className="flex items-center gap-3.5">
                                     <div
                                         className={`flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                                            isOpen ? 'bg-blue-100 text-[#2563eb]' : 'bg-slate-100 text-slate-500'
+                                            isOpen ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'
                                         }`}
                                     >
                                         <HelpCircle className="size-5" />
                                     </div>
-                                    <span className="text-base font-bold text-[#0a192f] sm:text-lg">
+                                    <span className="text-base sm:text-lg font-bold text-slate-900">
                                         {item.question}
                                     </span>
                                 </div>
                                 <div
-                                    className={`flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200/60 bg-white transition-transform duration-300 ${
-                                        isOpen ? 'rotate-180 bg-blue-50 border-blue-200 text-[#2563eb]' : 'text-slate-400'
+                                    className={`flex size-8 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                                        isOpen
+                                            ? 'rotate-180 border-blue-300 bg-blue-50 text-blue-600'
+                                            : 'border-slate-200 text-slate-400'
                                     }`}
                                 >
                                     <ChevronDown className="size-4" />
@@ -79,19 +81,19 @@ export function FaqSection() {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: 'auto', opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                        transition={{ duration: 0.25, ease: 'easeInOut' }}
                                     >
-                                        <div className="border-t border-slate-100 px-6 pb-6 pt-4 text-sm leading-relaxed text-slate-600 sm:px-7 sm:text-[15px]">
+                                        <div className="border-t border-slate-100 px-5 sm:px-6 pb-6 pt-4 text-xs sm:text-sm leading-relaxed text-slate-600 font-normal">
                                             {item.answer}
 
                                             {item.hasLink && (
-                                                <div className="mt-4">
+                                                <div className="mt-4 pt-2">
                                                     <Link
                                                         href="/aspirasi"
-                                                        className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-xs font-bold text-[#2563eb] transition hover:bg-blue-100 hover:text-blue-700"
+                                                        className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-600 transition-all hover:bg-blue-600 hover:text-white"
                                                     >
                                                         <MessageSquareWarning className="size-4" />
-                                                        Buka Layanan Suara Mahasiswa
+                                                        <span>Buka Layanan Suara Mahasiswa</span>
                                                         <ArrowRight className="size-3.5" />
                                                     </Link>
                                                 </div>
@@ -106,28 +108,29 @@ export function FaqSection() {
             </div>
 
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="mx-auto mt-12 max-w-3xl rounded-[2rem] border border-blue-100 bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-sky-50/80 p-6 shadow-sm backdrop-blur-md sm:flex sm:items-center sm:justify-between sm:p-8"
+                transition={{ duration: 0.4, delay: 0.2 }}
+                className="mx-auto mt-12 max-w-3xl rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-8 text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-6"
             >
-                <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-                    <div className="flex size-12 items-center justify-center rounded-2xl bg-[#2563eb] text-white shadow-md shadow-blue-500/20">
-                        <MessageSquareWarning className="size-6" />
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                        <MessageSquareWarning className="size-5" />
                     </div>
                     <div>
-                        <h4 className="text-base font-bold text-[#0a192f]">Punya keluhan atau masukan fasilitas?</h4>
-                        <p className="mt-0.5 text-xs font-medium text-slate-500">
-                            Suara kamu membantu perbaikan fasilitas & layanan akademik.
+                        <h4 className="text-base font-bold text-white">Punya keluhan atau masukan fasilitas?</h4>
+                        <p className="mt-1 text-xs sm:text-sm text-slate-300 font-normal">
+                            Suara kamu sangat berharga untuk perbaikan fasilitas & layanan akademik.
                         </p>
                     </div>
                 </div>
                 <Link
                     href="/aspirasi"
-                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2563eb] px-5 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg sm:mt-0 sm:w-auto shrink-0"
+                    className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-500 active:scale-[0.98]"
                 >
-                    Sampaikan Aspirasi <ArrowRight className="size-4" />
+                    <span>Sampaikan Aspirasi</span>
+                    <ArrowRight className="size-4" />
                 </Link>
             </motion.div>
         </section>

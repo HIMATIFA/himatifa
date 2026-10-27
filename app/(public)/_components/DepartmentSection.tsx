@@ -12,93 +12,111 @@ import {
 } from 'lucide-react'
 import { departments, DepartmentKey } from './data'
 
+const departmentIcons: Record<DepartmentKey, React.ElementType> = {
+    PSDM: Users,
+    Deplu: Globe,
+    Kepsos: HeartHandshake,
+    Ekraf: Lightbulb,
+    Medkominfo: Megaphone,
+}
+
 export function DepartmentSection() {
     const [activeDepartment, setActiveDepartment] = useState<DepartmentKey>('PSDM')
     const current = departments[activeDepartment]
+    const IconComponent = departmentIcons[activeDepartment] || Users
+    const departmentKeys = Object.keys(departments) as DepartmentKey[]
+    const activeIndex = departmentKeys.indexOf(activeDepartment) + 1
 
     return (
-        <section id="departemen" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-24 lg:px-10">
-            <div className="mb-14">
-                <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#2563eb]">
-                    Struktur Gerak
-                </p>
-                <h2 className="text-4xl font-black tracking-tight text-[#0a192f] sm:text-5xl">
-                    Pilar{' '}
-                    <span className="bg-gradient-to-r from-[#2563eb] to-sky-400 bg-clip-text text-transparent">
-                        Penggerak.
+        <section id="departemen" className="mx-auto max-w-7xl scroll-mt-24 px-4 sm:px-6 py-20 lg:px-8 lg:py-28">
+            <div className="mb-10 sm:mb-14 max-w-3xl">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                    <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                        Struktur Gerak
                     </span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                    Pilar <span className="text-blue-600">Penggerak Organisasi</span>
                 </h2>
+                <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                    Lima departemen utama yang menjalankan fungsi strategis HIMATIFA UMSURA dalam pelayanan, pengembangan, dan karya nyata.
+                </p>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-[.35fr_.65fr] lg:gap-10">
-                <div className="flex flex-row overflow-x-auto pb-4 lg:flex-col lg:overflow-visible lg:pb-0 gap-2 snap-x hide-scrollbar">
-                    {(Object.keys(departments) as DepartmentKey[]).map((name) => (
-                        <button
-                            key={name}
-                            onClick={() => setActiveDepartment(name)}
-                            className={`group shrink-0 snap-start flex items-center justify-between rounded-2xl border-l-2 px-5 py-3.5 text-left text-sm font-bold transition-all sm:py-4 ${
-                                activeDepartment === name
-                                    ? 'border-[#2563eb] bg-white text-[#2563eb] shadow-md ring-1 ring-blue-900/5'
-                                    : 'border-transparent text-slate-500 hover:bg-white/60 hover:text-[#0a192f]'
-                            }`}
-                        >
-                            <span className="whitespace-nowrap">{name}</span>
-                            <ChevronRight
-                                className={`hidden size-4 transition-transform lg:block ${
-                                    activeDepartment === name ? 'translate-x-1' : 'opacity-0 group-hover:opacity-100'
+            <div className="grid gap-6 lg:grid-cols-[260px_1fr] lg:gap-8 items-start">
+                <div className="flex flex-row overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0 gap-2 snap-x hide-scrollbar">
+                    {departmentKeys.map((key) => {
+                        const isActive = activeDepartment === key
+                        return (
+                            <button
+                                key={key}
+                                onClick={() => setActiveDepartment(key)}
+                                className={`group shrink-0 snap-start flex items-center justify-between rounded-xl px-4 py-3.5 text-left text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                                    isActive
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                                        : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
                                 }`}
-                            />
-                        </button>
-                    ))}
+                            >
+                                <span className="whitespace-nowrap font-bold">{key}</span>
+                                <ChevronRight
+                                    className={`hidden size-4 transition-transform lg:block ${
+                                        isActive ? 'translate-x-0.5 text-white' : 'text-slate-400 group-hover:text-slate-600'
+                                    }`}
+                                />
+                            </button>
+                        )
+                    })}
                 </div>
 
-                <div className="min-h-[340px] rounded-3xl border border-white/80 bg-white/70 p-7 shadow-lg shadow-blue-900/5 backdrop-blur-xl sm:p-10">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-9 shadow-sm">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeDepartment}
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            exit={{ opacity: 0, y: -12 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
                         >
-                            <div className="mb-10 flex items-start justify-between">
+                            <div className="flex items-start justify-between gap-4 mb-6 sm:mb-8">
                                 <div>
-                                    <div className="mb-5 grid size-14 place-items-center rounded-2xl bg-blue-100 text-[#2563eb] shadow-sm">
-                                        {activeDepartment === 'PSDM' && <Users className="size-6" />}
-                                        {activeDepartment === 'Deplu' && <Globe className="size-6" />}
-                                        {activeDepartment === 'Kepsos' && <HeartHandshake className="size-6" />}
-                                        {activeDepartment === 'Ekraf' && <Lightbulb className="size-6" />}
-                                        {activeDepartment === 'Medkominfo' && <Megaphone className="size-6" />}
+                                    <div className="mb-4 grid size-12 place-items-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600">
+                                        <IconComponent className="size-6" />
                                     </div>
-                                    <p className="text-xs font-bold uppercase tracking-[.18em] text-[#2563eb]">
+                                    <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-600">
                                         Departemen {activeDepartment}
-                                    </p>
-                                    <h3 className="mt-2 max-w-md text-2xl font-black tracking-tight text-[#0a192f] sm:text-3xl">
+                                    </span>
+                                    <h3 className="mt-1 text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                                         {current.label}
                                     </h3>
                                 </div>
-                                <span className="hidden text-7xl font-black text-slate-100 sm:block">
-                                    0{Object.keys(departments).indexOf(activeDepartment) + 1}
+                                <span className="hidden sm:block text-5xl font-extrabold text-slate-200">
+                                    0{activeIndex}
                                 </span>
                             </div>
 
-                            <p className="max-w-2xl text-[15px] leading-relaxed text-slate-600">
+                            <p className="text-xs sm:text-sm leading-relaxed text-slate-600 font-normal">
                                 {current.desc}
                             </p>
 
-                            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                                {current.programs.map((program: string, i: number) => (
-                                    <motion.div
-                                        key={program}
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.15 + i * 0.08 }}
-                                        className="relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white/90 p-4 text-sm font-bold text-[#0a192f] shadow-sm transition-all hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
-                                    >
-                                        <span className="mb-3 block size-2.5 rounded-full bg-[#2563eb] shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
-                                        {program}
-                                    </motion.div>
-                                ))}
+                            <div className="mt-8 pt-6 border-t border-slate-100">
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 sm:mb-4">
+                                    Program Kerja Unggulan
+                                </h4>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    {current.programs.map((program: string, i: number) => (
+                                        <motion.div
+                                            key={program}
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.05 * i, duration: 0.2 }}
+                                            className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-xs sm:text-sm font-semibold text-slate-800 transition-all hover:border-blue-300 hover:bg-blue-50/50"
+                                        >
+                                            <span className="size-2 rounded-full bg-blue-600 shrink-0" />
+                                            <span>{program}</span>
+                                        </motion.div>
+                                    ))}
+                                </div>
                             </div>
                         </motion.div>
                     </AnimatePresence>

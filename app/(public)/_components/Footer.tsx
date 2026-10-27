@@ -1,43 +1,44 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Mail, Phone, Copyright } from 'lucide-react'
-import { navLinks, SOCIALS } from './data'
+import { navLinks, socials } from './data'
 
 export function Footer() {
     return (
-        <footer id="footer" className="relative bg-[#071426] px-6 pb-8 pt-20 text-white lg:px-10">
-            <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-            <div aria-hidden className="pointer-events-none absolute -top-24 left-1/2 h-64 w-[700px] -translate-x-1/2 rounded-full bg-[#2563eb]/10 blur-[100px]" />
-
+        <footer id="footer" className="relative bg-[#0a0f1d] border-t border-slate-800/80 px-4 sm:px-6 pt-16 pb-8 text-white lg:px-8 lg:pt-20">
             <div className="relative mx-auto max-w-7xl">
-                <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
-                    <div className="lg:col-span-4 lg:pr-6">
-                        <Link href="/" className="group flex w-fit items-center gap-3 font-black tracking-tight">
-                            <span className="grid size-12 place-items-center rounded-2xl bg-white/5 ring-1 ring-white/10 transition-all duration-300 group-hover:bg-[#2563eb]/20 group-hover:ring-blue-500/50">
+                <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+                    <div className="lg:col-span-4 lg:pr-4">
+                        <Link href="/" className="group inline-flex items-center gap-3 font-bold">
+                            <div className="grid size-10 place-items-center rounded-xl border border-slate-800 bg-slate-900 p-1.5 transition-colors group-hover:border-blue-500/50">
                                 <Image
                                     src="/himatifa1.png"
-                                    alt="Logo HIMATIFA UMSurabaya"
-                                    width={32}
-                                    height={32}
-                                    className="object-contain transition-transform duration-500 group-hover:scale-110"
+                                    alt="Logo HIMATIFA UMSURA"
+                                    width={28}
+                                    height={28}
+                                    className="object-contain"
                                 />
-                            </span>
-                            <span className="text-xl tracking-wide text-white transition-colors group-hover:text-blue-400">
-                                HIMATIFA
+                            </div>
+                            <span className="text-lg font-extrabold tracking-tight text-white group-hover:text-blue-400 transition-colors">
+                                HIMATIFA UMSURA
                             </span>
                         </Link>
-                        <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-blue-100/60">
-                            Himpunan Mahasiswa Teknik Informatika Universitas Muhammadiyah Surabaya. Bertumbuh, berkolaborasi, dan memberikan dampak.
+
+                        <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-400 font-normal max-w-sm">
+                            Himpunan Mahasiswa Teknik Informatika Universitas Muhammadiyah Surabaya. Bertumbuh, berkolaborasi, dan menghadirkan dampak positif berkelanjutan.
                         </p>
-                        <div className="mt-8 flex flex-wrap gap-3">
-                            {SOCIALS.map(({ label, href, icon: Icon }) => (
+
+                        <div className="mt-6 flex items-center gap-2.5">
+                            {socials.map(({ label, href, icon: Icon }) => (
                                 <Link
                                     key={label}
                                     aria-label={`${label} HIMATIFA`}
                                     href={href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="grid size-11 place-items-center rounded-xl bg-white/5 text-slate-300 ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:bg-[#2563eb] hover:text-white hover:ring-blue-500/40 hover:shadow-lg hover:shadow-blue-600/20"
+                                    className="grid size-9 place-items-center rounded-xl border border-slate-800 bg-slate-900/80 text-slate-400 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white active:scale-[0.96]"
                                 >
                                     <Icon className="size-4" />
                                 </Link>
@@ -46,15 +47,16 @@ export function Footer() {
                     </div>
 
                     <div className="lg:col-span-2">
-                        <h3 className="mb-6 text-xs font-black uppercase tracking-[.25em] text-white/90">Tautan</h3>
-                        <ul className="flex flex-col gap-3.5 text-[14.5px] font-medium text-blue-100/60">
+                        <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                            Navigasi
+                        </h3>
+                        <ul className="flex flex-col gap-2.5 text-xs sm:text-sm font-medium text-slate-400">
                             {navLinks.map((item) => (
                                 <li key={item.name}>
                                     <Link
                                         href={item.path}
-                                        className="group inline-flex items-center gap-2 transition-colors hover:text-white"
+                                        className="inline-block transition-colors hover:text-white"
                                     >
-                                        <span className="h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-4" />
                                         {item.name}
                                     </Link>
                                 </li>
@@ -63,54 +65,55 @@ export function Footer() {
                     </div>
 
                     <div className="lg:col-span-3">
-                        <h3 className="mb-6 text-xs font-black uppercase tracking-[.25em] text-white/90">Layanan</h3>
-                        <ul className="flex flex-col gap-3.5 text-[14.5px] font-medium text-blue-100/60">
+                        <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                            Layanan Mahasiswa
+                        </h3>
+                        <ul className="flex flex-col gap-2.5 text-xs sm:text-sm font-medium text-slate-400">
                             <li>
-                                <Link href="/akademik" className="group inline-flex items-center gap-2 transition-colors hover:text-white">
-                                    <span className="h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-4" />
+                                <Link href="/akademik" className="inline-block transition-colors hover:text-white">
                                     Layanan Akademik
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/aspirasi" className="group inline-flex items-center gap-2 transition-colors hover:text-white">
-                                    <span className="h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-4" />
-                                    Suara Mahasiswa
+                                <Link href="/aspirasi" className="inline-block transition-colors hover:text-white">
+                                    Suara Mahasiswa (Aspirasi)
                                 </Link>
                             </li>
                             <li>
-                                <Link href="/showcase" className="group inline-flex items-center gap-2 transition-colors hover:text-white">
-                                    <span className="h-px w-0 bg-blue-500 transition-all duration-300 group-hover:w-4" />
-                                    Karya Mahasiswa
+                                <Link href="/showcase" className="inline-block transition-colors hover:text-white">
+                                    Showcase Karya Mahasiswa
                                 </Link>
                             </li>
                         </ul>
                     </div>
 
                     <div className="lg:col-span-3">
-                        <h3 className="mb-6 text-xs font-black uppercase tracking-[.25em] text-white/90">Hubungi Kami</h3>
-                        <ul className="flex flex-col gap-5 text-sm text-blue-100/60">
-                            <li className="group flex items-start gap-4 transition-colors hover:text-white">
-                                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/5 ring-1 ring-white/10 transition-colors group-hover:bg-[#2563eb]/20 group-hover:ring-blue-500/50">
-                                    <MapPin className="size-4 text-blue-400" />
-                                </span>
-                                <span className="text-[13px] leading-relaxed">
+                        <h3 className="mb-4 text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                            Sekretariat
+                        </h3>
+                        <ul className="flex flex-col gap-3.5 text-xs sm:text-sm text-slate-400 font-normal">
+                            <li className="flex items-start gap-3">
+                                <div className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-900 text-blue-400 mt-0.5">
+                                    <MapPin className="size-4" />
+                                </div>
+                                <span className="leading-relaxed">
                                     Gedung G Lt. 3, Universitas Muhammadiyah Surabaya<br />
-                                    Jl. Sutorejo No.59, Surabaya, Jawa Timur 60113
+                                    Jl. Sutorejo No.59, Surabaya 60113
                                 </span>
                             </li>
-                            <li className="group flex items-center gap-4 transition-colors hover:text-white">
-                                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/5 ring-1 ring-white/10 transition-colors group-hover:bg-[#2563eb]/20 group-hover:ring-blue-500/50">
-                                    <Mail className="size-4 text-blue-400" />
-                                </span>
-                                <a href="mailto:himatifa@um-surabaya.ac.id" className="hover:text-blue-300 transition-colors">
+                            <li className="flex items-center gap-3">
+                                <div className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-900 text-blue-400">
+                                    <Mail className="size-4" />
+                                </div>
+                                <a href="mailto:himatifa@um-surabaya.ac.id" className="transition-colors hover:text-white">
                                     himatifa@um-surabaya.ac.id
                                 </a>
                             </li>
-                            <li className="group flex items-center gap-4 transition-colors hover:text-white">
-                                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/5 ring-1 ring-white/10 transition-colors group-hover:bg-[#2563eb]/20 group-hover:ring-blue-500/50">
-                                    <Phone className="size-4 text-blue-400" />
-                                </span>
-                                <a href="tel:+6281234567890" className="tracking-wider hover:text-blue-300 transition-colors">
+                            <li className="flex items-center gap-3">
+                                <div className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-800 bg-slate-900 text-blue-400">
+                                    <Phone className="size-4" />
+                                </div>
+                                <a href="tel:+6281234567890" className="transition-colors hover:text-white">
                                     +62 812 3456 7890
                                 </a>
                             </li>
@@ -118,12 +121,13 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                        <Copyright className="size-3.5" /> {new Date().getFullYear()} HIMATIFA UMSURA. Seluruh hak cipta dilindungi.
+                <div className="mt-12 sm:mt-16 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/80 pt-6 text-xs text-slate-500 font-medium">
+                    <p className="flex items-center gap-1.5">
+                        <Copyright className="size-3.5 shrink-0" />
+                        <span>{new Date().getFullYear()} HIMATIFA UMSURA. Hak Cipta Dilindungi.</span>
                     </p>
-                    <p className="text-xs font-medium text-slate-400">
-                        CREATED by MEDKOMINFO
+                    <p className="uppercase tracking-wider font-semibold text-[10px] text-slate-400">
+                        Dikembangkan oleh Departemen Medkominfo
                     </p>
                 </div>
             </div>
