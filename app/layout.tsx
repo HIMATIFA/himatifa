@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
     openGraph: {
         title: 'HIMATIFA UMSURA — Inovasi Tanpa Batas',
-        description: 'Himpunan Mahasiswa Teknik Informatika UMSURA.',
+        description: 'Himpunan Mahasiswa Informatika UMSURA.',
         url: 'https://himatifa.vercel.app',
         siteName: 'HIMATIFA UMSURA',
         images: [
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'HIMATIFA UMSURA — Inovasi Tanpa Batas',
-        description: 'Himpunan Mahasiswa Teknik Informatika UMSURA.',
+        description: 'Himpunan Mahasiswa Informatika UMSURA.',
         images: ['https://himatifa.vercel.app/himatifabg.png'],
     },
 }
