@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-    title: 'HIMATIFA UMSURA — Inovasi Tanpa Batas',
-    description: 'Himpunan Mahasiswa Teknik Informatika UMSURA (Universitas Muhammadiyah Surabaya).',
+    title: 'HIMATIFA UMSURA — Website Resmi Himpunan Mahasiswa Informatika',
+    description: 'Selamat Datang Di Website Resmi Himpunan Mahasiswa Informatika (HIMATIFA) Universitas Muhammadiyah Surabaya',
     generator: 'v0.app',
     icons: {
         icon: [
