@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { aspirasiCategories } from '@/app/data'
 import {
     ArrowLeft,
     MessageSquareWarning,
@@ -10,7 +11,10 @@ import {
     ShieldAlert,
     Copyright,
     CheckCircle2,
-    Sparkles
+    Sparkles,
+    ChevronDown,
+    User,
+    Hash
 } from 'lucide-react'
 
 export default function AspirasiPage() {
@@ -25,44 +29,45 @@ export default function AspirasiPage() {
         setTimeout(() => {
             setIsSubmitting(false)
             setIsSuccess(true)
-
-            setTimeout(() => setIsSuccess(false), 5000)
-        }, 1500)
+        }, 1200)
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 lg:px-10 lg:py-12 font-sans selection:bg-blue-500 selection:text-white">
-            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                <div className="absolute -left-32 -top-32 size-[500px] rounded-full bg-blue-400/20 blur-[140px]" />
-                <div className="absolute right-0 top-1/4 size-[600px] rounded-full bg-indigo-400/15 blur-[160px]" />
-                <div className="absolute bottom-10 left-1/3 size-[400px] rounded-full bg-emerald-400/15 blur-[130px]" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-60" />
-            </div>
+        <main className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased relative overflow-hidden">
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-40" />
 
-            <div className="mx-auto max-w-3xl">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-                    <Link className="group inline-flex items-center gap-2.5 text-sm font-bold text-slate-500 transition hover:text-blue-600" href="/">
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-white border border-slate-200 group-hover:bg-blue-50 group-hover:border-blue-200 transition">
-                            <ArrowLeft className="size-4" />
-                        </div>
-                        Kembali ke Beranda
+            <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+                <motion.div
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                >
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                    >
+                        <ArrowLeft className="size-3.5" />
+                        <span>Kembali ke Beranda</span>
                     </Link>
                 </motion.div>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="mt-10 mb-12 text-center"
+                    className="mt-8 mb-10 sm:mb-12 max-w-2xl"
                 >
-                    <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/20">
-                        <MessageSquareWarning className="size-8" />
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                        <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                            Pusat Aspirasi & Keluhan
+                        </span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight sm:text-5xl text-slate-900">
-                        Suara <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Mahasiswa.</span>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                        Suara <span className="text-blue-600">Mahasiswa</span>
                     </h1>
-                    <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-500 font-medium">
-                        Sampaikan kritik, saran, atau keluhan seputar fasilitas, layanan akademik, dan kegiatan HIMATIFA. Suara lo sangat berarti untuk evaluasi kami.
+                    <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                        Sampaikan kritik konstruktif, saran, atau keluhan seputar fasilitas, layanan akademik, serta kegiatan HIMATIFA UMSURA.
                     </p>
                 </motion.div>
 
@@ -71,28 +76,31 @@ export default function AspirasiPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                    <div className="relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/70 p-6 shadow-xl shadow-blue-900/5 backdrop-blur-xl sm:p-10">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
                         <AnimatePresence mode="wait">
                             {isSuccess ? (
                                 <motion.div
                                     key="success"
-                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    initial={{ opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    className="flex flex-col items-center justify-center py-12 text-center"
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    className="flex flex-col items-center justify-center py-10 text-center"
                                 >
-                                    <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-emerald-50 border border-emerald-100">
-                                        <CheckCircle2 className="size-10 text-emerald-500" />
+                                    <div className="mb-4 grid size-16 place-items-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                        <CheckCircle2 className="size-8" />
                                     </div>
-                                    <h3 className="text-2xl font-black tracking-tight text-slate-900">Aspirasi Terkirim!</h3>
-                                    <p className="mt-3 max-w-sm text-sm font-medium text-slate-500">
-                                        Terima kasih atas partisipasi lo. Pesan telah masuk ke dalam kotak suara pengurus dan akan segera ditindaklanjuti.
+                                    <h2 className="text-xl font-bold text-slate-900">
+                                        Aspirasi Berhasil Terkirim!
+                                    </h2>
+                                    <p className="mt-2 max-w-md text-xs sm:text-sm font-medium leading-relaxed text-slate-500">
+                                        Terima kasih atas partisipasi Anda. Pesan telah masuk ke dalam sistem verifikasi pengurus dan akan segera ditindaklanjuti.
                                     </p>
                                     <button
                                         onClick={() => setIsSuccess(false)}
-                                        className="mt-8 flex items-center gap-2 rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-200 hover:text-slate-900"
+                                        className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
                                     >
-                                        <Sparkles className="size-4" /> Kirim Aspirasi Lainnya
+                                        <Sparkles className="size-4 text-blue-600" />
+                                        <span>Kirim Aspirasi Lainnya</span>
                                     </button>
                                 </motion.div>
                             ) : (
@@ -102,21 +110,37 @@ export default function AspirasiPage() {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     onSubmit={handleSubmit}
-                                    className="grid gap-6"
+                                    className="space-y-6"
                                 >
-                                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-500/10">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`flex size-10 items-center justify-center rounded-full transition-colors ${isAnonymous ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                <ShieldAlert className="size-5" />
+                                    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-4 transition">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className={`grid size-9 place-items-center rounded-lg border transition-colors ${
+                                                    isAnonymous
+                                                        ? 'bg-blue-50 text-blue-600 border-blue-200'
+                                                        : 'bg-white text-slate-400 border-slate-200'
+                                                }`}
+                                            >
+                                                <ShieldAlert className="size-4.5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-slate-900">Kirim sebagai Anonim</p>
-                                                <p className="mt-0.5 text-xs font-medium text-slate-500">Identitas lo akan dirahasiakan sepenuhnya.</p>
+                                                <p className="text-xs font-bold text-slate-900">
+                                                    Kirim sebagai Anonim
+                                                </p>
+                                                <p className="mt-0.5 text-[11px] font-medium text-slate-500">
+                                                    Identitas pribadi Anda tidak akan dicatat oleh sistem.
+                                                </p>
                                             </div>
                                         </div>
+
                                         <label className="relative inline-flex cursor-pointer items-center">
-                                            <input type="checkbox" className="peer sr-only" checked={isAnonymous} onChange={() => setIsAnonymous(!isAnonymous)} />
-                                            <div className="peer h-7 w-12 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 transition-colors"></div>
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={isAnonymous}
+                                                onChange={() => setIsAnonymous(!isAnonymous)}
+                                            />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                         </label>
                                     </div>
 
@@ -126,49 +150,81 @@ export default function AspirasiPage() {
                                                 initial={{ opacity: 0, height: 0 }}
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 exit={{ opacity: 0, height: 0 }}
-                                                className="grid gap-6 overflow-hidden sm:grid-cols-2"
+                                                className="grid gap-5 overflow-hidden sm:grid-cols-2 pt-1"
                                             >
                                                 <div>
-                                                    <label className="mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Nama Lengkap</label>
-                                                    <input type="text" required={!isAnonymous} placeholder="Masukkan nama..." className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10" />
+                                                    <label className="mb-2 block text-xs font-semibold text-slate-700">
+                                                        Nama Lengkap
+                                                    </label>
+                                                    <div className="relative">
+                                                        <User className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                                                        <input
+                                                            type="text"
+                                                            required={!isAnonymous}
+                                                            placeholder="Masukkan nama lengkap Anda..."
+                                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
+                                                        />
+                                                    </div>
                                                 </div>
+
                                                 <div>
-                                                    <label className="mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">NIM</label>
-                                                    <input type="text" required={!isAnonymous} placeholder="Contoh: 20241337" className="w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10" />
+                                                    <label className="mb-2 block text-xs font-semibold text-slate-700">
+                                                        NIM (Nomor Induk Mahasiswa)
+                                                    </label>
+                                                    <div className="relative">
+                                                        <Hash className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                                                        <input
+                                                            type="text"
+                                                            required={!isAnonymous}
+                                                            placeholder="Contoh: 20230140001"
+                                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
 
                                     <div>
-                                        <label className="mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Kategori Laporan</label>
+                                        <label className="mb-2 block text-xs font-semibold text-slate-700">
+                                            Kategori Laporan / Masukan
+                                        </label>
                                         <div className="relative">
-                                            <select className="w-full appearance-none rounded-xl border border-slate-200 bg-white/80 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
-                                                <option value="akademik">Layanan Akademik & Perkuliahan</option>
-                                                <option value="fasilitas">Fasilitas Kampus & Laboratorium</option>
-                                                <option value="organisasi">Kegiatan Organisasi & Acara</option>
-                                                <option value="lainnya">Topik Lainnya</option>
+                                            <select className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 pl-4 pr-10 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10 cursor-pointer">
+                                                {aspirasiCategories.map((cat) => (
+                                                    <option key={cat.value} value={cat.value}>
+                                                        {cat.label}
+                                                    </option>
+                                                ))}
                                             </select>
-                                            <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-                                                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                                            </div>
+                                            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="mb-2 block text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Detail Pesan / Aspirasi</label>
-                                        <textarea required rows={5} placeholder="Ceritakan sedetail mungkin hal yang ingin lo sampaikan..." className="w-full resize-none rounded-xl border border-slate-200 bg-white/80 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10" />
+                                        <label className="mb-2 block text-xs font-semibold text-slate-700">
+                                            Detail Pesan & Aspirasi
+                                        </label>
+                                        <textarea
+                                            required
+                                            rows={5}
+                                            placeholder="Tuliskan saran, kritik, atau keluhan Anda secara jelas dan objektif..."
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
+                                        />
                                     </div>
 
                                     <button
                                         disabled={isSubmitting}
                                         type="submit"
-                                        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:shadow-blue-600/30 hover:scale-[1.01] active:scale-95 disabled:pointer-events-none disabled:opacity-70"
+                                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                                     >
                                         {isSubmitting ? (
-                                            <span className="size-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                            <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                         ) : (
-                                            <>Kirim Aspirasi <Send className="size-4" /></>
+                                            <>
+                                                <span>Kirim Aspirasi</span>
+                                                <Send className="size-3.5" />
+                                            </>
                                         )}
                                     </button>
                                 </motion.form>
@@ -181,15 +237,13 @@ export default function AspirasiPage() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                    className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200/60 pb-4 pt-8 sm:flex-row"
+                    transition={{ duration: 0.6 }}
+                    className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row text-xs text-slate-400 font-medium"
                 >
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                    <p className="flex items-center gap-1.5">
                         <Copyright className="size-3.5" /> 2026 HIMATIFA UMSURA
                     </p>
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                        Created by MEDKOMINFO
-                    </p>
+                    <p>Dikembangkan oleh Departemen Medkominfo</p>
                 </motion.footer>
             </div>
         </main>

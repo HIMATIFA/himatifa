@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import { showcaseProjects, type ProjectItem } from '@/app/data'
 import {
     ArrowLeft,
     ExternalLink,
     MonitorSmartphone,
     Sparkles,
     Copyright,
-    HeartHandshake
+    Code2
 } from 'lucide-react'
 
 const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -28,96 +29,60 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 )
 
-const projects = [
-    {
-        id: 1,
-        title: 'Kerjakarsa',
-        developer: 'Tim Gemastik XIX',
-        desc: 'Platform cerdas yang menghubungkan klien dengan pekerja lepas, dilengkapi fitur escrow payment dan live location tracking.',
-        tags: ['Next.js', 'Supabase', 'Tailwind'],
-        link: '#',
-        repo: 'https://github.com/muhammadarya-ums/kerjakarsa',
-        image: '/showcase-1.jpg'
-    },
-    {
-        id: 2,
-        title: 'NusAR',
-        developer: 'Divisi RnD Himatifa',
-        desc: 'Aplikasi edukasi interaktif berbasis mobile yang mengintegrasikan animasi dan sistem pemindaian cerdas untuk materi pembelajaran.',
-        tags: ['Capacitor', 'Mobile', 'Education'],
-        link: '#',
-        repo: 'https://github.com/muhammadarya-ums/NusAR',
-        image: '/showcase-2.jpg'
-    },
-    {
-        id: 3,
-        title: 'Smart Medical IoT',
-        developer: 'Study Club Hardware',
-        desc: 'Purwarupa sistem pemantauan medis menggunakan mikrokontroler dengan integrasi sensor oksimetri dan tekanan presisi tinggi.',
-        tags: ['ESP32', 'C++', 'I2C Sensors'],
-        link: '#',
-        repo: '#',
-        image: '/showcase-3.jpg'
-    }
-]
-
 const containerVariants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
-        transition: { staggerChildren: 0.15 }
+        transition: { staggerChildren: 0.1 }
     }
 }
 
 const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     show: {
         opacity: 1,
         y: 0,
-        transition: { type: "spring", stiffness: 80, damping: 15 }
+        transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
     }
 }
 
 export default function ShowcasePage() {
     return (
-        <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 lg:px-10 lg:py-12 font-sans selection:bg-blue-500 selection:text-white relative overflow-hidden">
-            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                <div className="absolute -left-32 -top-32 size-[500px] rounded-full bg-blue-400/20 blur-[140px]" />
-                <div className="absolute right-0 top-1/4 size-[600px] rounded-full bg-cyan-400/15 blur-[160px]" />
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-60" />
-            </div>
+        <main className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased relative overflow-hidden">
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-40" />
 
-            <div className="mx-auto max-w-7xl relative z-10">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+                <motion.div
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                >
                     <Link
                         href="/"
-                        className="group inline-flex items-center gap-2.5 text-sm font-bold text-slate-500 transition hover:text-blue-600"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
                     >
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-white border border-slate-200 group-hover:bg-blue-50 group-hover:border-blue-200 transition">
-                            <ArrowLeft className="size-4" />
-                        </div>
-                        Kembali ke Beranda
+                        <ArrowLeft className="size-3.5" />
+                        <span>Kembali ke Beranda</span>
                     </Link>
                 </motion.div>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
-                    className="mt-8 mb-14"
+                    className="mt-8 mb-10 sm:mb-14 max-w-3xl"
                 >
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/80 px-4 py-1.5 backdrop-blur-md shadow-sm">
-                        <Sparkles className="size-3.5 text-blue-600" />
-                        <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600">Hall of Fame</span>
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                        <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                            Hall of Fame & Showcase
+                        </span>
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-slate-900 sm:text-6xl">
-                        Karya Digital <br />
-                        <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 bg-clip-text text-transparent">
-              Mahasiswa.
-            </span>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                        Karya Digital <span className="text-blue-600">Mahasiswa</span>
                     </h1>
-                    <p className="mt-5 max-w-xl text-sm leading-relaxed text-slate-500 sm:text-base font-medium">
-                        Ruang apresiasi untuk inovasi, aplikasi, dan riset teknologi yang lahir dari tangan-tangan kreatif mahasiswa S1 Informatika UMSURA.
+                    <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                        Ruang apresiasi untuk inovasi perangkat lunak, aplikasi bergerak, dan riset teknologi yang lahir dari mahasiswa S1 Informatika UMSURA.
                     </p>
                 </motion.div>
 
@@ -125,68 +90,81 @@ export default function ShowcasePage() {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+                    className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
-                    {projects.map((project) => (
+                    {showcaseProjects.map((project) => (
                         <motion.div
                             key={project.id}
                             variants={cardVariants}
-                            whileHover={{ y: -8 }}
-                            className="group flex flex-col overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/70 shadow-xl shadow-blue-900/5 backdrop-blur-xl transition-all hover:bg-white/90"
+                            className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition-all duration-200 hover:border-slate-300 hover:shadow-md"
                         >
-                            <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
-                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100 text-slate-300">
-                                    <MonitorSmartphone className="size-16" />
+                            <div>
+                                <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100 border-b border-slate-100">
+                                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300">
+                                        <MonitorSmartphone className="size-12" />
+                                    </div>
+
+                                    {project.image && (
+                                        <Image
+                                            src={project.image}
+                                            alt={project.title}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none'
+                                            }}
+                                        />
+                                    )}
                                 </div>
 
-                                <Image
-                                    src={project.image}
-                                    alt={project.title}
-                                    fill
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105 z-10"
-                                    onError={(e) => { e.currentTarget.style.display = 'none' }} // Sembunyikan jika error
-                                />
+                                <div className="p-5 sm:p-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-md">
+                                            {project.developer}
+                                        </span>
+                                    </div>
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent z-20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                                        {project.title}
+                                    </h3>
+
+                                    <p className="mt-2 text-xs font-medium leading-relaxed text-slate-500 line-clamp-3">
+                                        {project.desc}
+                                    </p>
+
+                                    <div className="mt-4 flex flex-wrap gap-1.5">
+                                        {project.tags.map((tag) => (
+                                            <span
+                                                key={tag}
+                                                className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600"
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex flex-1 flex-col p-6 sm:p-8">
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-600">
-                  {project.developer}
-                </span>
-                                <h3 className="mt-2 text-xl font-black text-slate-900 line-clamp-1">{project.title}</h3>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-500 line-clamp-3 font-medium">
-                                    {project.desc}
-                                </p>
-
-                                <div className="mt-5 flex flex-wrap gap-2">
-                                    {project.tags.map(tag => (
-                                        <span
-                                            key={tag}
-                                            className="rounded-lg bg-blue-50/80 px-3 py-1.5 text-[11px] font-bold text-blue-700 border border-blue-100/50"
-                                        >
-                      {tag}
-                    </span>
-                                    ))}
-                                </div>
-
-                                <div className="mt-auto pt-8">
-                                    <div className="flex items-center gap-3">
+                            <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-2">
+                                <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                                    {project.repo && project.repo !== '#' && (
                                         <a
                                             href={project.repo}
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-xs font-bold text-white transition hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20"
+                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98]"
                                         >
-                                            <GithubIcon className="size-4" /> <span>Repo</span>
+                                            <GithubIcon className="size-3.5" />
+                                            <span>Repository</span>
                                         </a>
-                                        <a
-                                            href={project.link}
-                                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-700 transition hover:border-blue-500 hover:text-blue-600 hover:shadow-sm"
-                                        >
-                                            <span>Live Demo</span> <ExternalLink className="size-3.5" />
-                                        </a>
-                                    </div>
+                                    )}
+                                    <a
+                                        href={project.link}
+                                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 active:scale-[0.98]"
+                                    >
+                                        <span>Live Demo</span>
+                                        <ExternalLink className="size-3 text-slate-400" />
+                                    </a>
                                 </div>
                             </div>
                         </motion.div>
@@ -197,15 +175,13 @@ export default function ShowcasePage() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                    className="mt-20 flex flex-col items-center justify-between gap-3 border-t border-slate-200/60 pb-4 pt-8 sm:flex-row"
+                    transition={{ duration: 0.6 }}
+                    className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row text-xs text-slate-400 font-medium"
                 >
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                        <Copyright className="size-3.5" /> {new Date().getFullYear()} HIMATIFA UMSURA
+                    <p className="flex items-center gap-1.5">
+                        <Copyright className="size-3.5" /> 2026 HIMATIFA UMSURA
                     </p>
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                        CREATED by MEDKOMINFO
-                    </p>
+                    <p>Dikembangkan oleh Departemen Medkominfo</p>
                 </motion.footer>
             </div>
         </main>

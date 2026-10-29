@@ -94,6 +94,140 @@ export interface DiscussionItem {
     time: string
 }
 
+export interface AcademicLink {
+    label: string
+    href: string
+    isDownload?: boolean
+    isCheck?: boolean
+}
+
+export interface AcademicContact {
+    name: string
+    role: string
+}
+
+export interface AcademicServiceItem {
+    id: number
+    title: string
+    description: string
+    iconType: 'calendar' | 'briefcase' | 'graduation' | 'fileText'
+    iconBg: string
+    isHighlight?: boolean
+    links: AcademicLink[]
+    contacts?: AcademicContact[]
+}
+
+export const academicServices: AcademicServiceItem[] = [
+    {
+        id: 1,
+        title: 'KRS & Perkuliahan',
+        description: 'Informasi jadwal kuliah, panduan pengisian Kartu Rencana Studi (KRS), dan kalender akademik semester berjalan.',
+        iconType: 'calendar',
+        iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+        isHighlight: false,
+        links: [
+            { label: 'Kalender Akademik 2026/2027', href: '#', isDownload: true },
+            { label: 'SOP Pengisian KRS Online', href: '#', isDownload: false }
+        ]
+    },
+    {
+        id: 2,
+        title: 'Kerja Praktik & Magang',
+        description: 'Panduan pelaksanaan magang, syarat penyusunan laporan, dan kebijakan konversi SKS untuk kegiatan magang mandiri saat libur semester.',
+        iconType: 'briefcase',
+        iconBg: 'bg-blue-600 text-white shadow-xs',
+        isHighlight: true,
+        links: [
+            { label: 'Panduan Konversi Magang Mandiri', href: '#', isCheck: true },
+            { label: 'Form Pengajuan Kerja Praktik', href: '#', isDownload: true }
+        ],
+        contacts: [
+            { name: 'Bu Tining', role: 'Administrasi & Persetujuan' },
+            { name: 'Pak Ashr', role: 'Konversi SKS & Kurikulum' }
+        ]
+    },
+    {
+        id: 3,
+        title: 'Tugas Akhir / Skripsi',
+        description: 'Prosedur pendaftaran proposal, format penulisan skripsi terbaru, dan alur pendaftaran sidang pendadaran.',
+        iconType: 'graduation',
+        iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+        isHighlight: false,
+        links: [
+            { label: 'Template Penulisan Proposal', href: '#', isDownload: true },
+            { label: 'Alur Pendaftaran Sidang', href: '#', isDownload: false }
+        ]
+    },
+    {
+        id: 4,
+        title: 'Administrasi Surat',
+        description: 'Layanan pengajuan surat pengantar observasi, surat izin penelitian, dan dokumen kebutuhan akademik lainnya.',
+        iconType: 'fileText',
+        iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+        isHighlight: false,
+        links: [
+            { label: 'Form Surat Pengantar Observasi', href: '#', isDownload: false },
+            { label: 'Form Surat Izin Penelitian', href: '#', isDownload: false }
+        ]
+    }
+]
+
+export interface AspirasiCategory {
+    value: string
+    label: string
+}
+
+export const aspirasiCategories: AspirasiCategory[] = [
+    { value: 'akademik', label: 'Layanan Akademik & Perkuliahan' },
+    { value: 'fasilitas', label: 'Fasilitas Kampus & Laboratorium' },
+    { value: 'organisasi', label: 'Kegiatan Organisasi & Acara' },
+    { value: 'lainnya', label: 'Topik & Masukan Lainnya' },
+]
+
+export interface ProjectItem {
+    id: number
+    title: string
+    developer: string
+    desc: string
+    tags: string[]
+    link: string
+    repo: string
+    image: string
+}
+
+export const showcaseProjects: ProjectItem[] = [
+    {
+        id: 1,
+        title: 'Kerjakarsa',
+        developer: 'Tim Gemastik XIX',
+        desc: 'Platform cerdas yang menghubungkan klien dengan pekerja lepas, dilengkapi fitur escrow payment dan live location tracking.',
+        tags: ['Next.js', 'Supabase', 'Tailwind'],
+        link: '#',
+        repo: 'https://github.com/muhammadarya-ums/kerjakarsa',
+        image: '/showcase-1.jpg'
+    },
+    {
+        id: 2,
+        title: 'NusAR',
+        developer: 'Divisi RnD HIMATIFA',
+        desc: 'Aplikasi edukasi interaktif berbasis mobile yang mengintegrasikan animasi dan sistem pemindaian cerdas untuk materi pembelajaran.',
+        tags: ['Capacitor', 'Mobile', 'Education'],
+        link: '#',
+        repo: 'https://github.com/muhammadarya-ums/NusAR',
+        image: '/showcase-2.jpg'
+    },
+    {
+        id: 3,
+        title: 'Smart Medical IoT',
+        developer: 'Study Club Hardware',
+        desc: 'Purwarupa sistem pemantauan medis menggunakan mikrokontroler dengan integrasi sensor oksimetri dan tekanan presisi tinggi.',
+        tags: ['ESP32', 'C++', 'I2C Sensors'],
+        link: '#',
+        repo: '#',
+        image: '/showcase-3.jpg'
+    }
+]
+
 export const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Profil', path: '/about' },
