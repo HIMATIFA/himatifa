@@ -9,6 +9,7 @@ import {
     useReducedMotion,
     type Variants
 } from 'framer-motion'
+import { inquiryCategories } from '@/app/data'
 import {
     ArrowLeft,
     Mail,
@@ -17,21 +18,11 @@ import {
     Send,
     Copyright,
     ArrowUpRight,
-    Sparkles,
     Clock,
-    Building2,
     CheckCircle2,
     MessageSquareWarning,
-    Phone,
     ArrowUp
 } from 'lucide-react'
-
-const inquiryCategories = [
-    'Kerja Sama / Sponsor',
-    'Undangan Kegiatan / Delegasi',
-    'Kunjungan Industri / Media',
-    'Pertanyaan Akademik / Umum'
-]
 
 const container: Variants = {
     hidden: {},
@@ -68,7 +59,7 @@ function BackToTop() {
             whileTap={{ scale: 0.94 }}
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             aria-label="Kembali ke atas"
-            className="fixed bottom-6 right-6 z-50 grid size-11 place-items-center rounded-full bg-[#2563eb] text-white shadow-lg shadow-blue-600/30 transition-colors hover:bg-blue-600 cursor-pointer"
+            className="fixed bottom-6 right-6 z-50 grid size-11 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-500 cursor-pointer"
         >
             <ArrowUp className="size-4.5" />
         </motion.button>
@@ -93,168 +84,151 @@ export default function ContactPage() {
     }
 
     return (
-        <main className="relative min-h-screen bg-[#f8fafc] text-[#0a192f] antialiased selection:bg-blue-100 selection:text-blue-900">
+        <main className="relative min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
             <motion.div
                 style={{ scaleX: progressScale }}
-                className="fixed inset-x-0 top-0 z-[60] h-1 origin-left bg-gradient-to-r from-[#2563eb] via-sky-400 to-cyan-400"
+                className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-blue-600"
                 aria-hidden
             />
 
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-96 overflow-hidden">
-                <div className="absolute left-1/2 -top-40 -translate-x-1/2 size-[650px] rounded-full bg-gradient-to-b from-blue-100/70 via-indigo-50/40 to-transparent blur-3xl" />
-            </div>
+            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-40" />
 
-            <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-14">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-6">
+            <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+                <motion.div
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-6"
+                >
                     <Link
                         href="/"
-                        className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs transition-all hover:border-blue-300 hover:bg-blue-50/50 hover:text-[#2563eb]"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
                     >
-                        <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+                        <ArrowLeft className="size-3.5" />
                         <span>Kembali ke Beranda</span>
                     </Link>
 
-                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                        <Link href="/" className="hover:text-slate-900 transition-colors">
+                    <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                        <Link href="/" className="hover:text-slate-700 transition">
                             HIMATIFA
                         </Link>
                         <span>/</span>
-                        <span className="font-semibold text-[#2563eb]">Kontak & Kerja Sama</span>
+                        <span className="font-bold text-slate-900">Kontak & Kerja Sama</span>
                     </div>
-                </div>
+                </motion.div>
 
                 <motion.div
                     initial="hidden"
                     animate="show"
                     variants={container}
-                    className="mt-12 text-center sm:mt-16"
+                    className="mt-8 mb-10 sm:mb-14 max-w-3xl"
                 >
-                    <motion.div
-                        variants={reveal}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-[#2563eb]"
-                    >
-                        <span>Pusat Komunikasi & Kemitraan</span>
-                    </motion.div>
-
-                    <motion.h1
-                        variants={reveal}
-                        className="mt-4 text-3xl font-black tracking-tight text-[#0a192f] sm:text-5xl lg:text-6xl"
-                    >
-                        Mari Terhubung &{' '}
-                        <span className="bg-gradient-to-r from-[#2563eb] to-sky-500 bg-clip-text text-transparent">
-                            Berkolaborasi.
+                    <motion.div variants={reveal} className="flex items-center gap-3 mb-3">
+                        <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                        <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                            Pusat Komunikasi & Kemitraan
                         </span>
+                    </motion.div>
+                    <motion.h1 variants={reveal} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                        Mari Terhubung & <span className="text-blue-600">Berkolaborasi</span>
                     </motion.h1>
-
-                    <motion.p
-                        variants={reveal}
-                        className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg"
-                    >
-                        Pintu komunikasi kami terbuka lebar untuk kolaborasi kemitraan, undangan pembicara, audiensi organisasi, maupun pertanyaan seputar kegiatan HIMATIFA.
+                    <motion.p variants={reveal} className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                        Kanal komunikasi terbuka untuk kemitraan, permohonan delegasi, audiensi organisasi, maupun pertanyaan seputar kegiatan HIMATIFA UMSURA.
                     </motion.p>
                 </motion.div>
 
-                <div className="mt-14 grid gap-8 lg:grid-cols-12 lg:items-start">
+                <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
                     <motion.div
                         initial="hidden"
                         whileInView="show"
                         viewport={{ once: true, margin: '-60px' }}
                         variants={container}
-                        className="flex flex-col gap-6 lg:col-span-5"
+                        className="flex flex-col gap-4 lg:col-span-5"
                     >
                         <motion.div variants={reveal}>
-                            <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-[#0c1f38] p-7 text-white shadow-xl sm:p-8">
-                                <div
-                                    aria-hidden
-                                    className="pointer-events-none absolute -bottom-16 -right-16 size-48 rounded-full bg-blue-500/20 blur-3xl"
-                                />
-
+                            <div className="relative overflow-hidden rounded-2xl border border-slate-900 bg-slate-900 p-6 sm:p-7 text-white shadow-xs">
                                 <div className="flex items-center gap-3">
-                                    <div className="grid size-11 place-items-center rounded-xl bg-blue-500/10 border border-blue-400/30 text-blue-300">
+                                    <div className="grid size-10 place-items-center rounded-xl bg-blue-500/10 border border-blue-400/20 text-blue-400">
                                         <MapPin className="size-5" />
                                     </div>
                                     <div>
-                                        <span className="text-[11px] font-bold uppercase tracking-wider text-blue-300">
+                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-400">
                                             Lokasi Sekretariat
                                         </span>
-                                        <h3 className="text-lg font-bold text-white">Kantor HIMATIFA</h3>
+                                        <h3 className="text-base font-bold text-white">Kantor HIMATIFA</h3>
                                     </div>
                                 </div>
 
-                                <p className="mt-5 text-sm leading-relaxed text-slate-300">
-                                    Gedung G Lantai 3, Fakultas Teknik Universitas Muhammadiyah Surabaya.<br />
+                                <p className="mt-4 text-xs sm:text-sm leading-relaxed text-slate-300 font-medium">
+                                    Gedung G Lantai 3, FT Universitas Muhammadiyah Surabaya.<br />
                                     Jl. Sutorejo No. 59, Mulyorejo, Surabaya, Jawa Timur 60113.
                                 </p>
 
-                                <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-blue-200 border-t border-slate-700/60 pt-4">
+                                <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-slate-400 border-t border-slate-800 pt-4">
                                     <Clock className="size-3.5 text-blue-400" />
                                     <span>Jam Pelayanan: Senin – Jumat (09.00 – 16.30 WIB)</span>
                                 </div>
                             </div>
                         </motion.div>
 
-                        {/* Direct Channels Cards */}
-                        <motion.div variants={reveal} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                            {/* Email Card */}
+                        <motion.div variants={reveal} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                             <a
                                 href="mailto:himatifa@um-surabaya.ac.id"
-                                className="group flex items-start gap-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:border-blue-300 hover:shadow-sm"
+                                className="group flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-blue-300 hover:shadow-sm"
                             >
-                                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#2563eb] border border-blue-100 transition-colors group-hover:bg-[#2563eb] group-hover:text-white">
-                                    <Mail className="size-5" />
+                                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                    <Mail className="size-4.5" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                                         Email Resmi Organisasi
                                     </span>
-                                    <h4 className="mt-0.5 text-sm font-bold text-[#0a192f] truncate group-hover:text-[#2563eb] transition-colors">
+                                    <h4 className="mt-0.5 text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
                                         himatifa@um-surabaya.ac.id
                                     </h4>
-                                    <p className="mt-1 text-xs text-slate-500">
+                                    <p className="mt-0.5 text-[11px] text-slate-500 font-medium">
                                         Surat resmi, undangan, & proposal kemitraan
                                     </p>
                                 </div>
                             </a>
 
-                            {/* WhatsApp Card */}
                             <a
                                 href="https://wa.me/6281234567890"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex items-start gap-4 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-300 hover:border-emerald-300 hover:shadow-sm"
+                                className="group flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-emerald-300 hover:shadow-sm"
                             >
-                                <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
-                                    <MessageCircle className="size-5" />
+                                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                    <MessageCircle className="size-4.5" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                                         WhatsApp Humas
                                     </span>
-                                    <h4 className="mt-0.5 text-sm font-bold text-[#0a192f] group-hover:text-emerald-700 transition-colors">
+                                    <h4 className="mt-0.5 text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
                                         +62 812-3456-7890
                                     </h4>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        Layanan komunikasi cepat perwakilan divisi humas
+                                    <p className="mt-0.5 text-[11px] text-slate-500 font-medium">
+                                        Layanan komunikasi cepat perwakilan humas
                                     </p>
                                 </div>
                             </a>
                         </motion.div>
 
-                        {/* Aspirasi Callout Card */}
                         <motion.div
                             variants={reveal}
-                            className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5 text-xs text-slate-600 sm:p-6"
+                            className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-xs text-slate-600 sm:p-5"
                         >
-                            <div className="flex items-center gap-2 font-bold text-[#2563eb]">
-                                <MessageSquareWarning className="size-4" />
-                                <span>Punya Keluhan atau Saran Akademik?</span>
+                            <div className="flex items-center gap-2 font-bold text-blue-900">
+                                <MessageSquareWarning className="size-4 text-blue-600" />
+                                <span>Punya Keluhan atau Masukan Akademik?</span>
                             </div>
-                            <p className="mt-1.5 leading-relaxed">
-                                Mahasiswa Informatika yang ingin menyampaikan aspirasi, aduan fasilitas, atau masukan prodi secara anonim dapat menggunakan kanal Suara Mahasiswa.
+                            <p className="mt-1.5 leading-relaxed text-slate-600 font-medium">
+                                Mahasiswa Informatika yang ingin menyampaikan aspirasi, aduan fasilitas, atau saran prodi dapat menggunakan layanan Suara Mahasiswa.
                             </p>
                             <Link
                                 href="/aspirasi"
-                                className="mt-3 inline-flex items-center gap-1 font-bold text-[#2563eb] hover:text-blue-700 transition-colors"
+                                className="mt-2.5 inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700 transition"
                             >
                                 <span>Buka Layanan Aspirasi</span>
                                 <ArrowUpRight className="size-3.5" />
@@ -262,84 +236,80 @@ export default function ContactPage() {
                         </motion.div>
                     </motion.div>
 
-                    {/* Right Column: Clean Interactive Form */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: '-60px' }}
                         transition={{ duration: 0.5, delay: 0.15 }}
-                        className="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm sm:p-10 lg:col-span-7"
+                        className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs lg:col-span-7"
                     >
-                        <div className="border-b border-slate-100 pb-5">
-                            <h2 className="text-xl font-black text-[#0a192f] sm:text-2xl">
+                        <div className="border-b border-slate-100 pb-4">
+                            <h2 className="text-lg font-bold text-slate-900 sm:text-xl">
                                 Formulir Pesan & Kolaborasi
                             </h2>
-                            <p className="mt-1 text-xs sm:text-sm text-slate-500">
-                                Sampaikan ide kolaborasi, undangan, atau pertanyaan Anda. Tim kami akan merespons melalui email dalam 1-2 hari kerja.
+                            <p className="mt-1 text-xs text-slate-500 font-medium">
+                                Sampaikan rencana kerja sama, undangan, atau pertanyaan Anda. Tim representatif kami akan merespons dalam 1-2 hari kerja.
                             </p>
                         </div>
 
                         {isSubmitted ? (
-                            <div className="my-10 rounded-2xl bg-emerald-50 border border-emerald-200 p-8 text-center">
-                                <div className="mx-auto grid size-12 place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                            <div className="my-8 rounded-xl bg-emerald-50 border border-emerald-200 p-6 text-center">
+                                <div className="mx-auto grid size-12 place-items-center rounded-xl bg-emerald-100 text-emerald-600 mb-3">
                                     <CheckCircle2 className="size-6" />
                                 </div>
-                                <h3 className="mt-4 text-lg font-bold text-emerald-900">
+                                <h3 className="text-base font-bold text-emerald-900">
                                     Pesan Berhasil Terkirim!
                                 </h3>
-                                <p className="mt-2 text-xs sm:text-sm text-emerald-700 max-w-md mx-auto leading-relaxed">
-                                    Terima kasih telah menghubungi HIMATIFA UMSURA. Tim representatif kami akan segera meninjau pesan Anda dan membalas melalui email yang Anda cantumkan.
+                                <p className="mt-1.5 text-xs text-emerald-700 max-w-md mx-auto font-medium leading-relaxed">
+                                    Terima kasih telah menghubungi HIMATIFA UMSURA. Tim perwakilan kami akan segera mengulas pesan Anda dan memberikan konfirmasi melalui email.
                                 </p>
                                 <button
                                     onClick={() => setIsSubmitted(false)}
-                                    className="mt-6 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-emerald-700"
+                                    className="mt-5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 active:scale-[0.98]"
                                 >
                                     Kirim Pesan Lainnya
                                 </button>
                             </div>
                         ) : (
-                            <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
-                                {/* Name & Institution Row */}
-                                <div className="grid gap-5 sm:grid-cols-2">
+                            <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+                                <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                                            Nama Lengkap <span className="text-rose-500">*</span>
+                                        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                            Nama Lengkap <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             required
-                                            placeholder="Contoh: Muhammad Rizki"
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100 transition-all"
+                                            placeholder="Masukkan nama lengkap Anda..."
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 px-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                                        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                                             Instansi / Organisasi
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="Nama instansi atau kampus"
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100 transition-all"
+                                            placeholder="Nama instansi atau universitas..."
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 px-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
                                         />
                                     </div>
                                 </div>
 
-                                {/* Email Address */}
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                                        Alamat Email Aktif <span className="text-rose-500">*</span>
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                        Alamat Email Aktif <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="email"
                                         required
-                                        placeholder="nama@email.com"
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100 transition-all"
+                                        placeholder="nama@domain.com"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 px-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
                                     />
                                 </div>
 
-                                {/* Category Selection */}
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                                         Kategori Kepentingan
                                     </label>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -350,10 +320,10 @@ export default function ContactPage() {
                                                     key={cat}
                                                     type="button"
                                                     onClick={() => setSelectedCategory(cat)}
-                                                    className={`rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition-all ${
+                                                    className={`rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-all ${
                                                         active
-                                                            ? 'border-blue-600 bg-blue-50/80 text-blue-700 ring-1 ring-blue-600'
-                                                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                                                            : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                                                     }`}
                                                 >
                                                     {cat}
@@ -363,24 +333,22 @@ export default function ContactPage() {
                                     </div>
                                 </div>
 
-                                {/* Message Field */}
                                 <div>
-                                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-                                        Isi Pesan / Penjelasan Kolaborasi <span className="text-rose-500">*</span>
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                        Isi Pesan & Penjelasan Kolaborasi <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
                                         required
                                         rows={5}
-                                        placeholder="Jelaskan maksud dan tujuan kerja sama, detail acara, atau pertanyaan Anda dengan jelas..."
-                                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-3 focus:ring-blue-100 transition-all"
+                                        placeholder="Jelaskan maksud dan tujuan kerja sama, detail acara, atau pertanyaan Anda..."
+                                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
                                     />
                                 </div>
 
-                                {/* Submit Button */}
                                 <button
                                     disabled={isSubmitting}
                                     type="submit"
-                                    className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2563eb] py-3.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:bg-blue-700 disabled:opacity-70 cursor-pointer"
+                                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -390,7 +358,7 @@ export default function ContactPage() {
                                     ) : (
                                         <>
                                             <span>Kirimkan Pesan</span>
-                                            <Send className="size-4" />
+                                            <Send className="size-3.5" />
                                         </>
                                     )}
                                 </button>
@@ -399,21 +367,14 @@ export default function ContactPage() {
                     </motion.div>
                 </div>
 
-                {/* Footer Section */}
-                <footer className="mt-20 flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 pt-8 pb-4 text-xs font-medium text-slate-500 sm:flex-row">
+                <footer className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 pb-4 text-xs font-medium text-slate-400 sm:flex-row">
                     <p className="flex items-center gap-1.5">
                         <Copyright className="size-3.5" /> {new Date().getFullYear()} HIMATIFA Universitas Muhammadiyah Surabaya.
                     </p>
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="hover:text-blue-600 transition-colors">
-                            Beranda
-                        </Link>
-                        <Link href="/about" className="hover:text-blue-600 transition-colors">
-                            Profil
-                        </Link>
-                        <Link href="/news" className="hover:text-blue-600 transition-colors">
-                            Berita
-                        </Link>
+                    <div className="flex items-center gap-4 text-slate-500">
+                        <Link href="/" className="hover:text-blue-600 transition">Beranda</Link>
+                        <Link href="/about" className="hover:text-blue-600 transition">Profil</Link>
+                        <Link href="/news" className="hover:text-blue-600 transition">Berita</Link>
                     </div>
                 </footer>
             </div>

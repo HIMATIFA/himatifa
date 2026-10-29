@@ -1,6 +1,216 @@
 import { Variants } from 'framer-motion'
 import { FaInstagram, FaGithub, FaYoutube } from 'react-icons/fa6'
 
+export interface IdentityItem {
+    label: string
+    value: string
+    iconType: 'building' | 'award' | 'graduation' | 'calendar' | 'shield'
+}
+
+export interface MissionItem {
+    number: string
+    category: string
+    title: string
+    desc: string
+    iconType: 'shield' | 'graduation' | 'handshake' | 'wallet' | 'globe' | 'megaphone' | 'lightbulb'
+}
+
+export interface FilosofiLogoItem {
+    image: string
+    title: string
+    badge: string
+    description: string
+}
+
+export const identitiesData: IdentityItem[] = [
+    { label: "Nama Resmi", value: "Himpunan Mahasiswa Informatika", iconType: "building" },
+    { label: "Nama Singkat", value: "HIMATIFA", iconType: "award" },
+    { label: "Institusi", value: "Universitas Muhammadiyah Surabaya", iconType: "building" },
+    { label: "Program Studi", value: "S1 Informatika", iconType: "graduation" },
+    { label: "Tanggal Berdiri", value: "10 Oktober 2020", iconType: "calendar" },
+    { label: "Periode Kepengurusan", value: "2026 / 2027", iconType: "shield" },
+]
+
+export const missionsData: MissionItem[] = [
+    {
+        number: "01",
+        category: "Tata Kelola Internal",
+        title: "Fondasi Organisasi Kokoh",
+        desc: "Memperkuat soliditas dan manajemen internal organisasi sebagai fondasi keberlanjutan roda kepengurusan HIMATIFA.",
+        iconType: "shield",
+    },
+    {
+        number: "02",
+        category: "Kapasitas Mahasiswa",
+        title: "Pengembangan Kompetensi",
+        desc: "Meningkatkan kemampuan teknikal dan soft skills mahasiswa Informatika melalui program pelatihan, bootcamp, dan study club terstruktur.",
+        iconType: "graduation",
+    },
+    {
+        number: "03",
+        category: "Kemitraan Akademik",
+        title: "Sinergi Dosen & Kampus",
+        desc: "Membangun komunikasi konstruktif dengan jajaran dosen dan program studi sebagai mitra strategis dalam pengembangan akademik.",
+        iconType: "handshake",
+    },
+    {
+        number: "04",
+        category: "Kemandirian Finansial",
+        title: "Pengelolaan Produktif",
+        desc: "Mengelola keuangan secara mandiri, transparan, dan produktif melalui divisi ekonomi kreatif untuk menopang agenda kerja.",
+        iconType: "wallet",
+    },
+    {
+        number: "05",
+        category: "Jejaring Eksternal",
+        title: "Relasi & Kolaborasi Industri",
+        desc: "Memperluas kemitraan strategis dengan organisasi kemahasiswaan lain, komunitas teknologi, dan mitra industri profesional.",
+        iconType: "globe",
+    },
+    {
+        number: "06",
+        category: "Komunikasi Publik",
+        title: "Penguatan Citra & Branding",
+        desc: "Membangun citra positif HIMATIFA sebagai wadah mahasiswa yang progresif, relevan, dan terpercaya di ranah digital.",
+        iconType: "megaphone",
+    },
+    {
+        number: "07",
+        category: "Pemberdayaan Mahasiswa",
+        title: "Inkubasi Aspirasi & Karya",
+        desc: "Menjadikan himpunan sebagai rumah yang responsif terhadap aspirasi, kreativitas, inovasi, serta peluang bagi seluruh anggota.",
+        iconType: "lightbulb",
+    },
+]
+
+export const filosofiLogoData: FilosofiLogoItem[] = [
+    {
+        image: "/logo_1.png",
+        title: "Microchip Processor",
+        badge: "Pola Pikir & Inovasi",
+        description: "Melambangkan pola pikir dan gerak mahasiswa Informatika yang selalu berada di garda terdepan dalam inovasi, adaptasi teknologi, dan pemecahan masalah secara logis."
+    },
+    {
+        image: "/logo_2.png",
+        title: "Lingkaran & Dua Garis",
+        badge: "Fondasi & Integritas",
+        description: "Lingkaran luar bermakna awal kelahiran himpunan yang bersih dan tulus. Lingkaran dalam melambangkan ranah Informatika, diapit dua garis yang mencerminkan keteguhan memegang dua kalimat syahadat."
+    },
+    {
+        image: "/logo_3.png",
+        title: "10 Cabang Sirkuit",
+        badge: "Sejarah & Keberagaman",
+        description: "Sepuluh cabang merepresentasikan tanggal berdirinya HIMATIFA pada 10 Oktober 2020, sekaligus mengilustrasikan keberagaman latar belakang mahasiswa yang terintegrasi dalam satu harmoni gerak."
+    },
+    {
+        image: "/logo_4.png",
+        title: "Tipografi Melingkar",
+        badge: "Solidaritas Bersatu",
+        description: "Tulisan yang melingkar secara utuh menggambarkan komitmen seluruh fungsionaris dan anggota untuk senantiasa bergandengan tangan, saling mendukung, dan kuat menghadapi dinamika zaman."
+    },
+    {
+        image: "/logo_5.png",
+        title: "Matahari Muhammadiyah",
+        badge: "Identitas & Nilai Luhur",
+        description: "Terletak di poros tengah lambang, menegaskan bahwa HIMATIFA tumbuh dan bernaung di bawah naungan Universitas Muhammadiyah Surabaya dengan membawa misi pencerahan dan kemaslahatan."
+    }
+]
+
+export const inquiryCategories: string[] = [
+    'Kerja Sama / Sponsor',
+    'Undangan Kegiatan / Delegasi',
+    'Kunjungan Industri / Media',
+    'Pertanyaan Akademik / Umum'
+]
+
+export interface EventItem {
+    id: number
+    title: string
+    date: string
+    month: string
+    year: string
+    time: string
+    location: string
+    category: 'Akademik' | 'Sosial' | 'Kreatif' | 'Organisasi'
+    status: 'Pendaftaran Dibuka' | 'Segera Hadir' | 'Selesai'
+    capacity?: string
+    speaker?: string
+    desc: string
+}
+
+export const eventsData: EventItem[] = [
+    {
+        id: 1,
+        title: 'Orientasi Studi & Cinta Almamater (OSCAR) 2026',
+        date: '19',
+        month: 'SEP',
+        year: '2026',
+        time: '07:00 - 16:00 WIB',
+        location: 'Gedung F & Hall UMSURA',
+        category: 'Organisasi',
+        status: 'Pendaftaran Dibuka',
+        capacity: 'Seluruh Maba FT',
+        speaker: 'Panitia OSCAR FT UMSURA',
+        desc: 'Rangkaian acara orientasi akademik dan pengenalan lingkungan kampus bagi mahasiswa baru Fakultas Teknik.'
+    },
+    {
+        id: 2,
+        title: 'AI Ambassador Workshop: S1 Informatika UMSURA',
+        date: '13',
+        month: 'JUL',
+        year: '2026',
+        time: '08:00 - 12:00 WIB',
+        location: 'SpInS Interactional School, Surabaya',
+        category: 'Akademik',
+        status: 'Selesai',
+        capacity: '100 Peserta',
+        speaker: 'Tim Pengmas Informatika UMSURA',
+        desc: 'Workshop edukasi literasi digital dan pengenalan kecerdasan buatan bagi siswa-siswi sekolah menengah.'
+    },
+    {
+        id: 3,
+        title: 'Seminar Etika Profesi & Dunia Kerja Informatika',
+        date: '24',
+        month: 'JUN',
+        year: '2026',
+        time: '09:00 - 12:30 WIB',
+        location: 'Auditorium At-Tawhid Lnt. 13 UMSURA',
+        category: 'Akademik',
+        status: 'Selesai',
+        capacity: '150 Peserta',
+        speaker: 'Alumni S1 Informatika & Pemkot Surabaya',
+        desc: 'Diskusi interaktif mengenai etika profesi, ekspektasi industri IT, dan kesiapan berkarier di pemerintahan maupun swasta.'
+    },
+    {
+        id: 4,
+        title: 'Kuliah Tamu Telkomsat Collaboration 2026',
+        date: '06',
+        month: 'JUN',
+        year: '2026',
+        time: '08:30 - 11:30 WIB',
+        location: 'Ruang Seminar FT UMSURA Lnt. 3',
+        category: 'Akademik',
+        status: 'Selesai',
+        capacity: '120 Peserta',
+        speaker: 'Tim Ahli Telkom Satellite',
+        desc: 'Eksplorasi wawasan teknologi telekomunikasi satelit dan peluang karier bagi mahasiswa komputasi.'
+    },
+    {
+        id: 5,
+        title: 'Informatics Skill Upgrade: Next.js & Tailwind CSS',
+        date: '15',
+        month: 'NOV',
+        year: '2026',
+        time: '09:00 - 15:00 WIB',
+        location: 'Lab Komputer Lnt. 4 UMSURA',
+        category: 'Kreatif',
+        status: 'Pendaftaran Dibuka',
+        capacity: '40 Peserta',
+        speaker: 'Departemen RnD HIMATIFA',
+        desc: 'Bootcamp intensif pemrograman web modern dengan Next.js App Router dan Tailwind CSS untuk pemula.'
+    }
+]
+
 export type DepartmentKey = 'PSDM' | 'Deplu' | 'Kepsos' | 'Ekraf' | 'Medkominfo'
 
 export interface DepartmentDetail {
