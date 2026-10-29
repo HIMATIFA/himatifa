@@ -4,7 +4,7 @@ import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, useScroll, useTransform, useInView, animate } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { heroContainer, heroItem, stats } from './data'
+import { heroContainer, heroItem, stats } from '../../data'
 
 interface CounterProps {
     target: number

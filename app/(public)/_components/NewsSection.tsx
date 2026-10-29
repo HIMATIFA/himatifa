@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
-import { newsData } from './data'
+import { newsData } from '../../data'
 
 export function NewsSection() {
     return (

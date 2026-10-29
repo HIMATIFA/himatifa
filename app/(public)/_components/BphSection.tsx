@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ZoomIn } from 'lucide-react'
-import { people } from './data'
+import { people } from '../../data'
 
 export function BphSection() {
     const [selectedPerson, setSelectedPerson] = useState<typeof people[number] | null>(null)

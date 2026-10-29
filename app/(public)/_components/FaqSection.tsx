@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HelpCircle, ChevronDown, MessageSquareWarning, ArrowRight } from 'lucide-react'
-import { faqData } from './data'
+import { faqData } from '../../data'
 
 export function FaqSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(3)

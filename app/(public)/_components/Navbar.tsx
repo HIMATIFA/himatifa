@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion'
 import { Menu, X, ArrowUpRight, ChevronRight } from 'lucide-react'
-import { navLinks } from './data'
+import { navLinks } from '../../data'
 
 export function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false)
@@ -29,14 +29,12 @@ export function Navbar() {
 
     return (
         <>
-            {/* Scroll Progress Bar */}
             <motion.div
                 style={{ scaleX: progressScale }}
                 className="fixed inset-x-0 top-0 z-[70] h-1 origin-left bg-gradient-to-r from-blue-600 via-sky-400 to-cyan-400"
                 aria-hidden
             />
 
-            {/* Header Header Container */}
             <header
                 className={`fixed inset-x-0 z-50 flex justify-center transition-all duration-500 ease-out ${
                     isScrolled ? 'top-3 sm:top-4 px-4 sm:px-6' : 'top-0 px-0'
@@ -49,7 +47,6 @@ export function Navbar() {
                             : 'w-full border-b border-transparent bg-transparent px-6 py-4 sm:px-10'
                     }`}
                 >
-                    {/* Logo & Identity */}
                     <Link
                         href="/"
                         className="group flex items-center gap-3 transition-transform duration-300 hover:scale-[1.02]"
@@ -79,7 +76,6 @@ export function Navbar() {
                         </div>
                     </Link>
 
-                    {/* Desktop Navigation Links */}
                     <div className="hidden items-center gap-7 text-[13px] font-semibold lg:flex">
                         {navLinks.map((item) => (
                             <Link
@@ -102,7 +98,6 @@ export function Navbar() {
                         </a>
                     </div>
 
-                    {/* CTA Button Desktop */}
                     <Link
                         href="/ekrafstore"
                         className="hidden items-center rounded-full bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-lg lg:flex"
@@ -110,7 +105,6 @@ export function Navbar() {
                         Ekraf Store <ArrowUpRight className="ml-1 size-3.5" />
                     </Link>
 
-                    {/* Mobile Hamburger Button */}
                     <button
                         aria-label={mobileOpen ? 'Tutup menu' : 'Buka menu'}
                         onClick={() => setMobileOpen(true)}
@@ -123,11 +117,9 @@ export function Navbar() {
                 </nav>
             </header>
 
-            {/* Mobile Slide-Over Drawer */}
             <AnimatePresence>
                 {mobileOpen && (
                     <>
-                        {/* Backdrop Overlay */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -137,7 +129,6 @@ export function Navbar() {
                             className="fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm lg:hidden"
                         />
 
-                        {/* Side Drawer Panel */}
                         <motion.div
                             initial={{ x: '100%' }}
                             animate={{ x: 0 }}
@@ -145,7 +136,6 @@ export function Navbar() {
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="fixed inset-y-0 right-0 z-[90] flex w-full max-w-xs flex-col justify-between bg-slate-900 border-l border-slate-800 p-6 shadow-2xl lg:hidden"
                         >
-                            {/* Drawer Header */}
                             <div>
                                 <div className="flex items-center justify-between pb-6 border-b border-slate-800">
                                     <div className="flex items-center gap-2.5">
@@ -170,7 +160,6 @@ export function Navbar() {
                                     </button>
                                 </div>
 
-                                {/* Drawer Links */}
                                 <div className="mt-6 flex flex-col gap-1.5">
                                     {navLinks.map((item, i) => (
                                         <motion.div
@@ -206,7 +195,6 @@ export function Navbar() {
                                 </div>
                             </div>
 
-                            {/* Drawer Footer CTA */}
                             <div className="pt-6 border-t border-slate-800">
                                 <Link
                                     onClick={() => setMobileOpen(false)}

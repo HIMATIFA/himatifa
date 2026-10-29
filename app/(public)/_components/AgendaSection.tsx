@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, CalendarDays, MapPin } from 'lucide-react'
-import { agenda} from './data'
+import { agenda} from '../../data'
 
 export function AgendaSection() {
     return (

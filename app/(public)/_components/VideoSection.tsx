@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { Play, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react'
-import {reveal, revealStagger} from './data'
+import {reveal, revealStagger} from '../../data'
 
 export function VideoSection() {
     const videoRef = useRef<HTMLVideoElement>(null)

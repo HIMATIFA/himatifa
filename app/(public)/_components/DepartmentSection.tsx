@@ -10,7 +10,7 @@ import {
     Lightbulb,
     Megaphone
 } from 'lucide-react'
-import { departments, DepartmentKey } from './data'
+import { departments, DepartmentKey } from '../../data'
 
 const departmentIcons: Record<DepartmentKey, React.ElementType> = {
     PSDM: Users,

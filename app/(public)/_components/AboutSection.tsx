@@ -8,7 +8,7 @@ import {
     Code2,
     HeartHandshake
 } from 'lucide-react'
-import { container, revealStagger, misi } from './data'
+import { container, revealStagger, misi } from '../../data'
 
 const pillarIcons = [Users, Code2, HeartHandshake]
 

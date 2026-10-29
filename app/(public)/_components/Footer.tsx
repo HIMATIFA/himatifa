@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Mail, Phone, Copyright } from 'lucide-react'
-import { navLinks, socials } from './data'
+import { navLinks, socials } from '../../data'
 
 export function Footer() {
     return (
