@@ -1,6 +1,15 @@
 import { Variants } from 'framer-motion'
 import { FaInstagram, FaGithub, FaYoutube } from 'react-icons/fa6'
 
+export type UserRole = 'admin' | 'sekum' | 'bendum' | 'ekraf'
+
+export interface UserProfile {
+    name: string
+    role: UserRole
+    roleLabel: string
+    avatar: string
+}
+
 export interface IdentityItem {
     label: string
     value: string
@@ -209,6 +218,45 @@ export const eventsData: EventItem[] = [
         speaker: 'Departemen RnD HIMATIFA',
         desc: 'Bootcamp intensif pemrograman web modern dengan Next.js App Router dan Tailwind CSS untuk pemula.'
     }
+]
+
+export type OrderStatus = 'Diproses' | 'Selesai' | 'Batal'
+
+export interface EkrafProduct {
+    id: string
+    sku: string
+    name: string
+    category: string
+    stock: number
+    price: number
+    salesCount: number
+}
+
+export interface EkrafOrder {
+    id: string
+    customerName: string
+    productName: string
+    qty: number
+    totalPrice: number
+    date: string
+    status: OrderStatus
+}
+
+export const ekrafCategories: string[] = ['Semua', 'Merchandise', 'Pakaian', 'Aksesoris', 'Tas']
+
+export const initialEkrafProducts: EkrafProduct[] = [
+    { id: 'p-1', sku: 'EKR-001', name: 'Lanyard HIMATIFA Eksklusif', category: 'Merchandise', stock: 45, price: 35000, salesCount: 112 },
+    { id: 'p-2', sku: 'EKR-002', name: 'PDH Resmi HIMATIFA 2026', category: 'Pakaian', stock: 8, price: 165000, salesCount: 88 },
+    { id: 'p-3', sku: 'EKR-003', name: 'Gantungan Kunci Acrylic Logo', category: 'Merchandise', stock: 80, price: 12000, salesCount: 150 },
+    { id: 'p-4', sku: 'EKR-004', name: 'Sticker Pack Informatika (5 Pcs)', category: 'Aksesoris', stock: 120, price: 15000, salesCount: 210 },
+    { id: 'p-5', sku: 'EKR-005', name: 'Tote Bag Kanvas Premium HIMATIFA', category: 'Tas', stock: 0, price: 55000, salesCount: 40 }
+]
+
+export const initialEkrafOrders: EkrafOrder[] = [
+    { id: 'ORD-1001', customerName: 'Rizky Febrian', productName: 'Lanyard HIMATIFA Eksklusif', qty: 2, totalPrice: 70000, date: '25 Sep 2026', status: 'Diproses' },
+    { id: 'ORD-1002', customerName: 'Siti Nurhaliza', productName: 'PDH Resmi HIMATIFA 2026', qty: 1, totalPrice: 165000, date: '24 Sep 2026', status: 'Selesai' },
+    { id: 'ORD-1003', customerName: 'Ahmad Dahlan', productName: 'Sticker Pack Informatika (5 Pcs)', qty: 3, totalPrice: 45000, date: '24 Sep 2026', status: 'Selesai' },
+    { id: 'ORD-1004', customerName: 'Budi Santoso', productName: 'Tote Bag Kanvas Premium HIMATIFA', qty: 1, totalPrice: 55000, date: '22 Sep 2026', status: 'Batal' }
 ]
 
 export type DepartmentKey = 'PSDM' | 'Deplu' | 'Kepsos' | 'Ekraf' | 'Medkominfo'

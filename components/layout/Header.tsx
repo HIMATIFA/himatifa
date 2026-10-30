@@ -53,7 +53,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     <Menu className="size-4.5" />
                 </button>
 
-                {/* Breadcrumb Navigation */}
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
                     <span className="hidden sm:inline">SIM HIMATIFA</span>
                     <ChevronRight className="hidden size-3 text-slate-300 sm:inline" />

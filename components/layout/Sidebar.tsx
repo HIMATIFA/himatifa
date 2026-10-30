@@ -10,16 +10,24 @@ import {
     BarChart3,
     Folders,
     LogOut,
-    Sparkles
+    FileText,
+    ClipboardList,
+    Wallet,
+    Receipt,
+    Store,
+    FileCheck2
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+export type UserRole = 'admin' | 'sekum' | 'bendum' | 'ekraf'
+
 interface SidebarProps {
     isCollapsed: boolean
+    userRole?: UserRole
 }
 
-export default function Sidebar({ isCollapsed }: SidebarProps) {
+export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProps) {
     const pathname = usePathname()
 
     const isActive = (path: string) => {
@@ -27,18 +35,44 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         return pathname.startsWith(path)
     }
 
-    const navSections = [
+    const masterNavSections = [
         {
             title: 'Overview',
+            roles: ['admin', 'sekum', 'bendum', 'ekraf'],
             items: [
                 { id: 'dashboard', label: 'Dashboard Overview', path: '/admin', icon: LayoutDashboard },
-                { id: 'analytics', label: 'Site Analytics', path: '/admin/analytics', icon: BarChart3 },
+                { id: 'analytics', label: 'Site Analytics', path: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
             ]
         },
         {
-            title: 'Content Management',
+            title: 'Sekretariat (Sekum)',
+            roles: ['admin', 'sekum'],
             items: [
-                { id: 'berita', label: 'Artikel & Berita', path: '/admin/berita', icon: Newspaper, count: 4 },
+                { id: 'surat', label: 'Persuratan & SK', path: '/sekum/surat', icon: FileText, count: 3 },
+                { id: 'notulensi', label: 'Notulensi Rapat', path: '/sekum/notulensi', icon: ClipboardList },
+                { id: 'presensi', label: 'Presensi Pengurus', path: '/sekum/presensi', icon: FileCheck2 },
+            ]
+        },
+        {
+            title: 'Keuangan (Bendum)',
+            roles: ['admin', 'bendum'],
+            items: [
+                { id: 'kas', label: 'Kas Organisasi', path: '/bendum/kas', icon: Wallet },
+                { id: 'lpj', label: 'LPJ & Anggaran', path: '/bendum/lpj', icon: Receipt },
+            ]
+        },
+        {
+            title: 'Ekonomi Kreatif',
+            roles: ['admin', 'ekraf', 'bendum'],
+            items: [
+                { id: 'adminekraf', label: 'Manajemen Ekraf', path: '/adminekraf', icon: Store, count: 4 },
+            ]
+        },
+        {
+            title: 'Content & Media',
+            roles: ['admin'],
+            items: [
+                { id: 'berita', label: 'Artikel & Berita', path: '/admin/berita', icon: Newspaper, count: 6 },
                 { id: 'agenda', label: 'Agenda Kegiatan', path: '/admin/agenda', icon: CalendarDays, count: 5 },
                 { id: 'bph', label: 'Struktur BPH', path: '/admin/bph', icon: Users },
                 { id: 'kategori', label: 'Kategori Modul', path: '/admin/kategori', icon: Folders },
@@ -46,12 +80,20 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
         },
         {
             title: 'System',
+            roles: ['admin'],
             items: [
                 { id: 'media', label: 'Media Library', path: '/admin/media', icon: ImageIcon },
                 { id: 'pengaturan', label: 'Pengaturan Web', path: '/admin/pengaturan', icon: Settings },
             ]
         }
     ]
+
+    const filteredSections = masterNavSections
+        .filter((section) => section.roles.includes(userRole))
+        .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => !item.roles || item.roles.includes(userRole))
+        }))
 
     return (
         <aside
@@ -72,13 +114,13 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
                         <h1 className="text-xs font-black tracking-wider text-slate-900 uppercase">
                             SIM HIMATIFA
                         </h1>
-                        <p className="text-[10px] font-semibold text-slate-400">Workspace Admin</p>
+                        <p className="text-[10px] font-semibold text-slate-400">Workspace Management</p>
                     </div>
                 )}
             </div>
 
             <div className="flex-1 overflow-y-auto px-3 py-5 scrollbar-none space-y-6">
-                {navSections.map((section, idx) => (
+                {filteredSections.map((section, idx) => (
                     <div key={idx}>
                         {!isCollapsed && (
                             <p className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
@@ -149,8 +191,8 @@ export default function Sidebar({ isCollapsed }: SidebarProps) {
                         <>
                             <div className="flex-1 overflow-hidden">
                                 <p className="truncate text-xs font-bold text-slate-900">Muhammad Arya</p>
-                                <p className="truncate text-[10px] font-medium text-slate-400">
-                                    Super Administrator
+                                <p className="truncate text-[10px] font-medium text-slate-400 capitalize">
+                                    {userRole === 'admin' ? 'Super Administrator' : `Pengurus (${userRole})`}
                                 </p>
                             </div>
                             <Link
