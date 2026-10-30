@@ -10,6 +10,118 @@ export interface UserProfile {
     avatar: string
 }
 
+export type TransactionType = 'income' | 'expense'
+export type TransactionCategory = 'Kas' | 'Danus' | 'Proker' | 'Operasional'
+
+export interface Transaction {
+    id: string
+    date: string
+    description: string
+    type: TransactionType
+    category: TransactionCategory
+    amount: number
+}
+
+export const initialTransactions: Transaction[] = [
+    {
+        id: 'tx-1',
+        date: '24 Sep 2026',
+        description: 'Pembayaran DP Jaket Himpunan',
+        type: 'expense',
+        category: 'Proker',
+        amount: 500000
+    },
+    {
+        id: 'tx-2',
+        date: '22 Sep 2026',
+        description: 'Iuran Kas Pengurus (Periode September)',
+        type: 'income',
+        category: 'Kas',
+        amount: 150000
+    },
+    {
+        id: 'tx-3',
+        date: '18 Sep 2026',
+        description: 'Penjualan Lanyard Ekraf Store (5 Pcs)',
+        type: 'income',
+        category: 'Danus',
+        amount: 175000
+    },
+    {
+        id: 'tx-4',
+        date: '12 Sep 2026',
+        description: 'Pembelian ATK & Konsumsi Rapat Pleno',
+        type: 'expense',
+        category: 'Operasional',
+        amount: 350000
+    },
+    {
+        id: 'tx-5',
+        date: '05 Sep 2026',
+        description: 'Sponsor & Dana Hibah Mitra Kerja Sama',
+        type: 'income',
+        category: 'Danus',
+        amount: 1775000
+    }
+]
+
+export type LpjStatus = 'Menunggu Verifikasi' | 'Disetujui' | 'Revisi' | 'Ditolak'
+
+export interface LpjItem {
+    id: string
+    title: string
+    division: string
+    submittedDate: string
+    budgetPlanned: number
+    budgetUsed: number
+    status: LpjStatus
+    documentUrl?: string
+    notes?: string
+}
+
+export const initialLpjData: LpjItem[] = [
+    {
+        id: 'LPJ-2026-001',
+        title: 'LPJ Makrab MIDNIGHT 2025',
+        division: 'Departemen PSDM',
+        submittedDate: '18 Mei 2026',
+        budgetPlanned: 4500000,
+        budgetUsed: 4320000,
+        status: 'Disetujui',
+        notes: 'Sisa dana kas telah dikembalikan ke Bendahara sebesar Rp 180.000.'
+    },
+    {
+        id: 'LPJ-2026-002',
+        title: 'Pengajuan Anggaran Workshop AI Ambassador',
+        division: 'Departemen Luar Negeri',
+        submittedDate: '02 Juli 2026',
+        budgetPlanned: 2800000,
+        budgetUsed: 2750000,
+        status: 'Disetujui',
+        notes: 'Nota dan kuitansi konsumsi terlampir lengkap.'
+    },
+    {
+        id: 'LPJ-2026-003',
+        title: 'LPJ Seminar Etika Profesi Informatika',
+        division: 'Departemen PSDM',
+        submittedDate: '28 Juni 2026',
+        budgetPlanned: 3500000,
+        budgetUsed: 3500000,
+        status: 'Menunggu Verifikasi',
+        notes: 'Menunggu pengecekan kelengkapan stempel kuitansi tempat.'
+    },
+    {
+        id: 'LPJ-2026-004',
+        title: 'Proposal & Anggaran Pembelian Inventaris Sekre',
+        division: 'Internal / Sekum',
+        submittedDate: '10 September 2026',
+        budgetPlanned: 1200000,
+        budgetUsed: 0,
+        status: 'Revisi',
+        notes: 'Mohon cantumkan minimal 2 pembanding harga toko ATK.'
+    }
+]
+
 export interface IdentityItem {
     label: string
     value: string
@@ -173,7 +285,7 @@ export const eventsData: EventItem[] = [
         category: 'Akademik',
         status: 'Selesai',
         capacity: '100 Peserta',
-        speaker: 'Tim Pengmas Informatika UMSURA',
+        speaker: 'Tim Research Informatika UMSURA',
         desc: 'Workshop edukasi literasi digital dan pengenalan kecerdasan buatan bagi siswa-siswi sekolah menengah.'
     },
     {
