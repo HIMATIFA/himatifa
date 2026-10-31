@@ -22,7 +22,7 @@ import {
     Building,
     Sparkles,
     Check,
-    RotateCcw
+    RotateCcw, ChevronRight
 } from 'lucide-react'
 
 const formatRupiah = (val: number): string => {
@@ -142,14 +142,15 @@ export default function BendumLpjPage() {
 
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-slate-200 pb-5">
                 <div>
-                    <div className="mb-2 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-                        <ShieldCheck className="size-3.5" />
-                        <span>Bendahara Umum (Bendum)</span>
+                    <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 mb-1">
+                        <span>SIM HIMATIFA</span>
+                        <ChevronRight className="size-3 text-slate-400" />
+                        <span className="text-slate-500">Bendahara Umum (Bendum)</span>
                     </div>
                     <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                         LPJ & Verification <span className="text-blue-600">Anggaran</span>
                     </h1>
-                    <p className="mt-1 text-xs text-slate-500 font-medium">
+                    <p className="mt-1 text-xs sm:text-sm text-slate-500">
                         Verifikasi kelayakan Laporan Pertanggungjawaban (LPJ) dan pertanggungjawaban nota belanja proker.
                     </p>
                 </div>

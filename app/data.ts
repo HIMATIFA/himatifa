@@ -122,6 +122,144 @@ export const initialLpjData: LpjItem[] = [
     }
 ]
 
+export type SuratCategory = 'Proposal' | 'LPJ' | 'Surat Keluar' | 'Surat Masuk' | 'SK'
+export type SuratStatus = 'Terverifikasi' | 'Menunggu' | 'Ditolak'
+
+export interface ArchiveDocument {
+    id: string
+    title: string
+    category: SuratCategory
+    uploader: string
+    date: string
+    size: string
+    status: SuratStatus
+}
+
+export const initialArchiveDocuments: ArchiveDocument[] = [
+    { id: 'DOC-001', title: 'Proposal VIBRANUM 2026', category: 'Proposal', uploader: 'Arya Putra', date: '12 Okt 2026', size: '2.4 MB', status: 'Terverifikasi' },
+    { id: 'DOC-002', title: 'LPJ Seminar Nasional AI', category: 'LPJ', uploader: 'Divisi Keilmuan', date: '05 Okt 2026', size: '4.1 MB', status: 'Terverifikasi' },
+    { id: 'DOC-003', title: '112/B/HIMA/IX/2026 - Undangan BEM', category: 'Surat Keluar', uploader: 'Sekretaris', date: '24 Sep 2026', size: '850 KB', status: 'Terverifikasi' },
+    { id: 'DOC-004', title: '012/SK/HIMA/VIII/2026 - Susunan BPH', category: 'SK', uploader: 'Ketua Umum', date: '15 Ags 2026', size: '1.2 MB', status: 'Terverifikasi' },
+    { id: 'DOC-005', title: 'Surat Peminjaman Gedung Teater', category: 'Surat Masuk', uploader: 'Sekretaris', date: '10 Ags 2026', size: '500 KB', status: 'Menunggu' },
+]
+
+export type NotulensiCategory = 'Rapat Pleno' | 'Rapat BPH' | 'Rapat Evaluasi' | 'Rapat Koordinasi'
+
+export interface NotulensiItem {
+    id: string
+    title: string
+    category: NotulensiCategory
+    date: string
+    leader: string
+    attendeesCount: number
+    summary: string
+    fileSize?: string
+}
+
+export const initialNotulensiData: NotulensiItem[] = [
+    {
+        id: 'NOT-001',
+        title: 'Rapat Pleno Awal Semester Ganjil 2026/2027',
+        category: 'Rapat Pleno',
+        date: '18 Sep 2026',
+        leader: 'Muhammad Arya (Ketum)',
+        attendeesCount: 34,
+        summary: 'Pembahasan timeline proker utama semester ganjil, penyelarasan kalender akademik, dan pengesahan RAB awal tiap departemen.',
+        fileSize: '1.2 MB'
+    },
+    {
+        id: 'NOT-002',
+        title: 'Rapat BPH Mingguan #4 - Evaluasi Ekraf',
+        category: 'Rapat BPH',
+        date: '22 Sep 2026',
+        leader: 'Siti Nurhaliza (Sekum)',
+        attendeesCount: 12,
+        summary: 'Evaluasi penjualan merchandise Lanyard, pencatatan kas masuk, dan alokasi modal awal untuk pembuatan PDH 2026.',
+        fileSize: '850 KB'
+    },
+    {
+        id: 'NOT-003',
+        title: 'Rapat Koordinasi Panitia VIBRANUM 2026',
+        category: 'Rapat Koordinasi',
+        date: '01 Okt 2026',
+        leader: 'Rizky Febrian (Ketua Panitia)',
+        attendeesCount: 25,
+        summary: 'Finalisasi konsep venue, penetapan skema sponsorship mitra kerja sama, dan penentuan timeline pendaftaran peserta.',
+        fileSize: '2.1 MB'
+    },
+    {
+        id: 'NOT-004',
+        title: 'Rapat Evaluasi Tengah Periode Kepengurusan',
+        category: 'Rapat Evaluasi',
+        date: '15 Okt 2026',
+        leader: 'Muhammad Arya (Ketum)',
+        attendeesCount: 40,
+        summary: 'Review kinerjabebas tiap departemen, pembahasan kendala presensi rapat pengurus, serta penetapan rekomendasi perbaikan.',
+        fileSize: '1.8 MB'
+    }
+]
+
+export type AttendanceSessionStatus = 'Selesai' | 'Berlangsung'
+
+export interface AttendanceRecord {
+    id: string
+    eventName: string
+    date: string
+    totalMembers: number
+    presentCount: number
+    permissionCount: number
+    sickCount: number
+    absentCount: number
+    status: AttendanceSessionStatus
+}
+
+export const initialAttendanceData: AttendanceRecord[] = [
+    {
+        id: 'PRES-001',
+        eventName: 'Rapat Pleno Awal Semester Ganjil 2026/2027',
+        date: '18 Sep 2026',
+        totalMembers: 40,
+        presentCount: 34,
+        permissionCount: 4,
+        sickCount: 2,
+        absentCount: 0,
+        status: 'Selesai'
+    },
+    {
+        id: 'PRES-002',
+        eventName: 'Rapat BPH Mingguan #4',
+        date: '22 Sep 2026',
+        totalMembers: 15,
+        presentCount: 12,
+        permissionCount: 2,
+        sickCount: 0,
+        absentCount: 1,
+        status: 'Selesai'
+    },
+    {
+        id: 'PRES-003',
+        eventName: 'Rapat Koordinasi Panitia VIBRANUM 2026',
+        date: '01 Okt 2026',
+        totalMembers: 30,
+        presentCount: 25,
+        permissionCount: 3,
+        sickCount: 1,
+        absentCount: 1,
+        status: 'Selesai'
+    },
+    {
+        id: 'PRES-004',
+        eventName: 'Rapat Pleno Evaluasi Tengah Periode',
+        date: '28 Okt 2026',
+        totalMembers: 40,
+        presentCount: 28,
+        permissionCount: 5,
+        sickCount: 2,
+        absentCount: 5,
+        status: 'Berlangsung'
+    }
+]
+
 export interface IdentityItem {
     label: string
     value: string

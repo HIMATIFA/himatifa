@@ -50,7 +50,6 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
                 <div>
                     <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 mb-1">
@@ -74,7 +73,6 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* Metric Cards Grid */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {stats.map((stat, index) => {
                     const iconConfig = getStatIcon(index)
@@ -124,9 +122,7 @@ export default function AdminDashboardPage() {
                 })}
             </div>
 
-            {/* Main Section Grid */}
             <div className="grid gap-6 lg:grid-cols-12">
-                {/* Left Column: Recent Activity Log (8 cols) */}
                 <div className="lg:col-span-8 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
                     <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
                         <div className="flex items-center gap-3">
@@ -163,9 +159,7 @@ export default function AdminDashboardPage() {
                     </div>
                 </div>
 
-                {/* Right Column: Discussions & System Health (4 cols) */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
-                    {/* Diskusi & Komentar */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
                         <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
                             <div className="flex items-center gap-3">
@@ -219,7 +213,6 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
 
-                    {/* System Status Card */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                         <div className="flex items-center gap-3">
                             <div className="grid size-9 place-items-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
