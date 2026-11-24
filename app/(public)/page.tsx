@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     motion,
     AnimatePresence,
@@ -34,6 +35,7 @@ import {
     Sparkles,
     Code2,
     Award,
+    Newspaper
 } from 'lucide-react'
 import {
     navLinks,
@@ -84,6 +86,27 @@ function Counter({ target, suffix = '', isYear = false, duration = 2 }: CounterP
             {suffix}
         </span>
     )
+}
+
+interface BeritaBeranda {
+    id: string
+    title: string
+    category: string
+    image: string | null
+    link: string | null
+    excerpt: string | null
+    published_at: string
+}
+
+function formatTanggalBerita(dateStr: string) {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    })
 }
 
 export default function Page() {
@@ -143,6 +166,38 @@ export default function Page() {
         window.addEventListener('scroll', onScroll, { passive: true })
         return () => window.removeEventListener('scroll', onScroll)
     }, [])
+
+    const [latestNews, setLatestNews] = useState<BeritaBeranda[]>([])
+    const [isLoadingNews, setIsLoadingNews] = useState(true)
+
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
+
+    useEffect(() => {
+        const fetchLatestNews = async () => {
+            setIsLoadingNews(true)
+            const { data, error } = await supabase
+                .from('berita')
+                .select('id, title, category, image, link, excerpt, published_at')
+                .eq('status', 'Published')
+                .order('published_at', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(3)
+
+            if (!error && data) {
+                setLatestNews(data as BeritaBeranda[])
+            }
+            setIsLoadingNews(false)
+        }
+
+        fetchLatestNews()
+    }, [supabase])
 
     return (
         <main className="min-h-screen overflow-hidden bg-transparent text-[#0a192f]">
@@ -697,92 +752,132 @@ export default function Page() {
                ========================================================================= */}
             <section id="berita" className="relative scroll-mt-24 feed-section-white border-b border-slate-200/60 py-16 sm:py-20 lg:py-28">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
-                            <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
-                                Berita Terbaru
-                            </span>
+                    <div className="mb-10 sm:mb-14 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
+                                <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
+                        Berita Terbaru
+                    </span>
+                            </div>
+                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
+                                Kabar <span className="text-blue-600">Terbaru</span>
+                            </h2>
                         </div>
-                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900">
-                            Kabar <span className="text-blue-600">Terbaru</span>
-                        </h2>
+
+                        <Link
+                            href="/news"
+                            className="group hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                        >
+                            <span>Lihat Semua Kabar</span>
+                            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        </Link>
                     </div>
 
-                    <Link
-                        href="/news"
-                        className="group hidden sm:inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
-                    >
-                        <span>Lihat Semua Kabar</span>
-                        <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
-                    </Link>
-                </div>
+                    {isLoadingNews ? (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {[1, 2, 3].map((n) => (
+                                <div
+                                    key={n}
+                                    className="animate-pulse overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5"
+                                >
+                                    <div className="aspect-[16/10] w-full rounded-xl bg-slate-100 mb-4" />
+                                    <div className="h-3 w-24 rounded bg-slate-100 mb-3" />
+                                    <div className="h-5 w-full rounded bg-slate-100 mb-2" />
+                                    <div className="h-4 w-3/4 rounded bg-slate-100" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : latestNews.length > 0 ? (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {latestNews.map((article, i) => {
+                                const isKompasiana = article.link?.toLowerCase().includes('kompasiana.com')
 
-                <div className="grid gap-6 md:grid-cols-3">
-                    {newsData.slice(0, 3).map((article, i) => (
-                        <motion.article
-                            key={article.id}
-                            initial={{ opacity: 0, y: 6 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-20px' }}
-                            transition={{ delay: i * 0.04, duration: 0.25, ease: 'easeOut' }}
-                            className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/10"
-                        >
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                            <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
-                                <img
-                                    src={article.image}
-                                    alt={article.title}
-                                    loading="lazy"
-                                    className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                                />
-                                <span className="absolute left-3 top-3 rounded-md bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+                                return (
+                                    <motion.article
+                                        key={article.id}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, margin: '-20px' }}
+                                        transition={{ delay: i * 0.04, duration: 0.25, ease: 'easeOut' }}
+                                        className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/10"
+                                    >
+                                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
+                                            {article.image ? (
+                                                <img
+                                                    src={article.image}
+                                                    alt={article.title}
+                                                    loading="lazy"
+                                                    className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-slate-300">
+                                                    <Newspaper className="size-10" />
+                                                </div>
+                                            )}
+                                            <span className="absolute left-3 top-3 rounded-md bg-slate-900/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
                                     {article.category}
                                 </span>
-                            </div>
+                                        </div>
 
-                            <div className="flex flex-1 flex-col p-5 sm:p-6">
+                                        <div className="flex flex-1 flex-col p-5 sm:p-6">
                                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                                    {article.date}
+                                    {formatTanggalBerita(article.published_at)}
                                 </span>
 
-                                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug transition-colors group-hover:text-blue-600 line-clamp-2">
-                                    {article.title}
-                                </h3>
+                                            <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug transition-colors group-hover:text-blue-600 line-clamp-2">
+                                                {article.title}
+                                            </h3>
 
-                                <p className="mt-2.5 flex-1 text-xs sm:text-sm leading-relaxed text-slate-600 font-normal line-clamp-3">
-                                    {article.summary}
-                                </p>
+                                            <p className="mt-2.5 flex-1 text-xs sm:text-sm leading-relaxed text-slate-600 font-normal line-clamp-3">
+                                                {article.excerpt || 'Baca liputan lengkap kegiatan dan rilis pers resmi dari HIMATIFA UMSURA.'}
+                                            </p>
 
-                                <div className="mt-6 pt-4 border-t border-slate-100">
-                                    <a
-                                        href={article.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
-                                    >
-                                        <span>Baca Selengkapnya</span>
-                                        <ArrowUpRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                                    </a>
-                                </div>
-                            </div>
-                        </motion.article>
-                    ))}
-                </div>
+                                            <div className="mt-6 pt-4 border-t border-slate-100">
+                                                {article.link ? (
+                                                    <a
+                                                        href={article.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                                                    >
+                                                        <span>{isKompasiana ? 'Baca di Kompasiana' : 'Baca Selengkapnya'}</span>
+                                                        <ArrowUpRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                                    </a>
+                                                ) : (
+                                                    <Link
+                                                        href="/news"
+                                                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                                                    >
+                                                        <span>Lihat Detail</span>
+                                                        <ArrowRight className="size-4" />
+                                                    </Link>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </motion.article>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <div className="rounded-2xl border border-slate-200/90 bg-slate-50/50 p-10 text-center">
+                            <p className="text-sm font-semibold text-slate-600">Belum ada berita terbaru yang dipublikasikan.</p>
+                        </div>
+                    )}
 
-                <div className="mt-8 flex justify-center sm:hidden">
-                    <Link
-                        href="/news"
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-500 active:scale-[0.98]"
-                    >
-                        <span>Lihat Semua Kabar</span>
-                        <ArrowRight className="size-4" />
-                    </Link>
-                </div>
+                    {/* Tombol Baca Berita Lainnya */}
+                    <div className="mt-10 sm:mt-12 flex justify-center">
+                        <Link
+                            href="/news"
+                            className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition-all hover:bg-blue-500 active:scale-[0.98]"
+                        >
+                            <span>Baca Berita Lainnya</span>
+                            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        </Link>
+                    </div>
                 </div>
             </section>
-
             {/* =========================================================================
                 FAQ SECTION (Background dengan Opacity agar Grid Tembus)
                ========================================================================= */}

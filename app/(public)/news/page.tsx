@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     motion,
     useScroll,
@@ -9,7 +10,6 @@ import {
     useReducedMotion,
     type Variants
 } from 'framer-motion'
-import { newsData, type NewsItem } from '@/app/data'
 import {
     Search,
     ArrowUpRight,
@@ -17,13 +17,25 @@ import {
     Calendar,
     Newspaper,
     ArrowUp,
-    Copyright,
     X,
     Clock,
-    Minus
+    Minus,
+    Loader2
 } from 'lucide-react'
 
-const categories = ["Semua", "Organisasi", "Kegiatan", "Prestasi", "Info Kampus"]
+interface BeritaPublik {
+    id: string
+    title: string
+    slug: string
+    category: string
+    author: string
+    status: string
+    image: string | null
+    link: string | null
+    excerpt: string | null
+    views: number
+    published_at: string
+}
 
 const container: Variants = {
     hidden: {},
@@ -37,6 +49,17 @@ const reveal: Variants = {
         y: 0,
         transition: { duration: 0.25, ease: 'easeOut' },
     },
+}
+
+function formatTanggal(dateStr: string) {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    })
 }
 
 function BackToTop() {
@@ -68,29 +91,64 @@ function BackToTop() {
 }
 
 export default function NewsPage() {
+    const [articles, setArticles] = useState<BeritaPublik[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('Semua')
 
     const { scrollYProgress } = useScroll()
     const progressScale = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 })
 
-    const publishedNews = useMemo(() => {
-        return newsData.filter((article) => article.status === 'Published' || !article.status)
-    }, [])
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
+
+    useEffect(() => {
+        const fetchPublishedNews = async () => {
+            setIsLoading(true)
+            const { data, error } = await supabase
+                .from('berita')
+                .select('id, title, slug, category, author, status, image, link, excerpt, views, published_at')
+                .eq('status', 'Published')
+                .order('published_at', { ascending: false })
+                .order('created_at', { ascending: false })
+
+            if (error) {
+                console.error('Gagal memuat berita publik:', error.message)
+            } else {
+                setArticles((data as BeritaPublik[]) || [])
+            }
+            setIsLoading(false)
+        }
+
+        fetchPublishedNews()
+    }, [supabase])
+
+    const categories = useMemo(() => {
+        const baseCategories = ['Liputan Kegiatan', 'Rilis Pers', 'Opini & Artikel', 'Prestasi Mahasiswa', 'Pengumuman']
+        const dynamicCategories = articles.map((a) => a.category).filter(Boolean)
+        return ['Semua', ...Array.from(new Set([...baseCategories, ...dynamicCategories]))]
+    }, [articles])
 
     const filteredNews = useMemo(() => {
-        return publishedNews.filter((article) => {
+        return articles.filter((article) => {
             const matchesCategory = selectedCategory === 'Semua' || article.category === selectedCategory
             const q = searchQuery.toLowerCase().trim()
             const matchesSearch =
                 !q ||
-                article.title.toLowerCase().includes(q) ||
-                article.summary.toLowerCase().includes(q)
+                (article.title || '').toLowerCase().includes(q) ||
+                (article.excerpt || '').toLowerCase().includes(q) ||
+                (article.author || '').toLowerCase().includes(q)
             return matchesCategory && matchesSearch
         })
-    }, [publishedNews, searchQuery, selectedCategory])
+    }, [articles, searchQuery, selectedCategory])
 
-    const featuredArticle = publishedNews[0]
+    const featuredArticle = articles[0]
 
     return (
         <main className="relative min-h-screen bg-transparent text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
@@ -154,8 +212,8 @@ export default function NewsPage() {
                         {categories.map((category) => {
                             const isSelected = selectedCategory === category
                             const count = category === 'Semua'
-                                ? publishedNews.length
-                                : publishedNews.filter((item) => item.category === category).length
+                                ? articles.length
+                                : articles.filter((item) => item.category === category).length
 
                             return (
                                 <button
@@ -201,190 +259,212 @@ export default function NewsPage() {
                     </div>
                 </motion.div>
 
-                {selectedCategory === 'Semua' && !searchQuery && featuredArticle && (
-                    <motion.section
-                        initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true, margin: '-60px' }}
-                        variants={reveal}
-                        className="mt-8"
-                    >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-blue-600">
-                            <Minus className="size-3.5" />
-                            <span>Sorotan Utama</span>
-                        </div>
-
-                        <article className="group relative grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-blue-300 hover:shadow-md lg:grid-cols-12">
-                            <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100 lg:col-span-7 lg:aspect-auto lg:min-h-[360px]">
-                                {featuredArticle.image ? (
-                                    <img
-                                        src={featuredArticle.image}
-                                        alt={featuredArticle.title}
-                                        className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                ) : (
-                                    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300">
-                                        <Newspaper className="size-12" />
-                                    </div>
-                                )}
-                                <div className="absolute left-4 top-4">
-                                    <span className="rounded-lg bg-blue-600/90 px-3 py-1 text-xs font-bold text-white shadow-xs backdrop-blur-xs">
-                                        {featuredArticle.category}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col justify-between p-6 sm:p-8 lg:col-span-5">
-                                <div>
-                                    <div className="flex items-center gap-3 text-xs font-medium text-slate-400 border-b border-slate-100 pb-3">
-                                        <span className="flex items-center gap-1.5">
-                                            <Calendar className="size-3.5 text-blue-600" />
-                                            <span>{featuredArticle.date}</span>
-                                        </span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="size-3.5" />
-                                            <span>3 mnt baca</span>
-                                        </span>
-                                    </div>
-
-                                    <h2 className="mt-4 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 sm:text-xl">
-                                        {featuredArticle.title}
-                                    </h2>
-
-                                    <p className="mt-2.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-500 line-clamp-4">
-                                        {featuredArticle.summary}
-                                    </p>
-                                </div>
-
-                                <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                                    <span className="text-[11px] font-bold text-slate-400">
-                                        Oleh {featuredArticle.author || 'Divisi Medkominfo'}
-                                    </span>
-
-                                    {featuredArticle.link && (
-                                        <a
-                                            href={featuredArticle.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98]"
-                                        >
-                                            <span>Baca Selengkapnya</span>
-                                            <ArrowUpRight className="size-3.5" />
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        </article>
-                    </motion.section>
-                )}
-
-                <section className="mt-10">
-                    <div className="mb-5 flex items-center justify-between text-xs font-medium text-slate-500">
-                        <span>
-                            Menampilkan <strong className="text-slate-900">{filteredNews.length}</strong> artikel berita
-                            {searchQuery && <span> untuk kata kunci &ldquo;{searchQuery}&rdquo;</span>}
-                        </span>
+                {isLoading ? (
+                    <div className="my-16 flex flex-col items-center justify-center gap-3 text-slate-500">
+                        <Loader2 className="size-7 animate-spin text-blue-600" />
+                        <p className="text-xs font-semibold">Memuat berita terbaru HIMATIFA...</p>
                     </div>
+                ) : (
+                    <>
+                        {selectedCategory === 'Semua' && !searchQuery && featuredArticle && (
+                            <motion.section
+                                initial="hidden"
+                                whileInView="show"
+                                viewport={{ once: true, margin: '-60px' }}
+                                variants={reveal}
+                                className="mt-8"
+                            >
+                                <div className="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-blue-600">
+                                    <Minus className="size-3.5" />
+                                    <span>Sorotan Utama</span>
+                                </div>
 
-                    {filteredNews.length > 0 ? (
-                        <motion.div
-                            initial="hidden"
-                            whileInView="show"
-                            viewport={{ once: true, margin: '-40px' }}
-                            variants={container}
-                            className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                        >
-                            {filteredNews.map((article) => (
-                                <motion.article
-                                    key={article.id}
-                                    variants={reveal}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-blue-300 hover:shadow-md"
-                                >
-                                    <div>
-                                        <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100">
-                                            {article.image ? (
-                                                <img
-                                                    src={article.image}
-                                                    alt={article.title}
-                                                    loading="lazy"
-                                                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center text-slate-300">
-                                                    <Newspaper className="size-10" />
-                                                </div>
+                                <article className="group relative grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-blue-300 hover:shadow-md lg:grid-cols-12">
+                                    <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100 lg:col-span-7 lg:aspect-auto lg:min-h-[360px]">
+                                        {featuredArticle.image ? (
+                                            <img
+                                                src={featuredArticle.image}
+                                                alt={featuredArticle.title}
+                                                className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300">
+                                                <Newspaper className="size-12" />
+                                            </div>
+                                        )}
+                                        <div className="absolute left-4 top-4 flex items-center gap-2">
+                                            <span className="rounded-lg bg-blue-600/90 px-3 py-1 text-xs font-bold text-white shadow-xs backdrop-blur-xs">
+                                                {featuredArticle.category}
+                                            </span>
+                                            {featuredArticle.link?.toLowerCase().includes('kompasiana.com') && (
+                                                <span className="rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-extrabold text-sky-700 shadow-xs">
+                                                    Kompasiana
+                                                </span>
                                             )}
-                                            <div className="absolute left-3 top-3">
-                                                <span className="rounded-md bg-white/95 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 shadow-xs backdrop-blur-xs">
-                                                    {article.category}
-                                                </span>
-                                            </div>
                                         </div>
+                                    </div>
 
-                                        <div className="p-5">
-                                            <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-100 pb-2.5">
-                                                <span className="flex items-center gap-1.5 font-medium">
+                                    <div className="flex flex-col justify-between p-6 sm:p-8 lg:col-span-5">
+                                        <div>
+                                            <div className="flex items-center gap-3 text-xs font-medium text-slate-400 border-b border-slate-100 pb-3">
+                                                <span className="flex items-center gap-1.5">
                                                     <Calendar className="size-3.5 text-blue-600" />
-                                                    <span>{article.date}</span>
+                                                    <span>{formatTanggal(featuredArticle.published_at)}</span>
                                                 </span>
-                                                <span className="flex items-center gap-1 text-[11px]">
-                                                    <Clock className="size-3" />
-                                                    <span>3 mnt</span>
+                                                <span>•</span>
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="size-3.5" />
+                                                    <span>3 mnt baca</span>
                                                 </span>
                                             </div>
 
-                                            <h3 className="mt-3 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 line-clamp-2">
-                                                {article.title}
-                                            </h3>
+                                            <h2 className="mt-4 text-lg font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 sm:text-xl">
+                                                {featuredArticle.title}
+                                            </h2>
 
-                                            <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-500 line-clamp-3">
-                                                {article.summary}
+                                            <p className="mt-2.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-500 line-clamp-4">
+                                                {featuredArticle.excerpt || 'Baca liputan lengkap kegiatan dan rilis pers resmi dari HIMATIFA UMSURA.'}
                                             </p>
                                         </div>
-                                    </div>
 
-                                    <div className="px-5 pb-5">
-                                        {article.link ? (
-                                            <a
-                                                href={article.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="group/btn inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition"
-                                            >
-                                                <span>Baca selengkapnya</span>
-                                                <ArrowUpRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-                                            </a>
-                                        ) : (
-                                            <span className="text-xs text-slate-400 font-medium">Link artikel tidak tersedia</span>
-                                        )}
+                                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                            <span className="text-[11px] font-bold text-slate-400">
+                                                Oleh {featuredArticle.author || 'Divisi Medkominfo'}
+                                            </span>
+
+                                            {featuredArticle.link && (
+                                                <a
+                                                    href={featuredArticle.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98]"
+                                                >
+                                                    <span>Baca di Kompasiana</span>
+                                                    <ArrowUpRight className="size-3.5" />
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
-                                </motion.article>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <div className="my-10 rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-xs">
-                            <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 mb-3">
-                                <Newspaper className="size-6" />
+                                </article>
+                            </motion.section>
+                        )}
+
+                        <section className="mt-10">
+                            <div className="mb-5 flex items-center justify-between text-xs font-medium text-slate-500">
+                                <span>
+                                    Menampilkan <strong className="text-slate-900">{filteredNews.length}</strong> artikel berita
+                                    {searchQuery && <span> untuk kata kunci &ldquo;{searchQuery}&rdquo;</span>}
+                                </span>
                             </div>
-                            <h3 className="text-base font-bold text-slate-900">
-                                Tidak ada berita ditemukan
-                            </h3>
-                            <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto font-medium">
-                                Coba sesuaikan kata kunci pencarian atau ganti kategori filter.
-                            </p>
-                            <button
-                                onClick={() => {
-                                    setSearchQuery('')
-                                    setSelectedCategory('Semua')
-                                }}
-                                className="mt-4 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition"
-                            >
-                                Reset Filter
-                            </button>
-                        </div>
-                    )}
-                </section>
+
+                            {filteredNews.length > 0 ? (
+                                <motion.div
+                                    initial="hidden"
+                                    whileInView="show"
+                                    viewport={{ once: true, margin: '-40px' }}
+                                    variants={container}
+                                    className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+                                >
+                                    {filteredNews.map((article) => {
+                                        const isKompasiana = article.link?.toLowerCase().includes('kompasiana.com')
+
+                                        return (
+                                            <motion.article
+                                                key={article.id}
+                                                variants={reveal}
+                                                className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:border-blue-300 hover:shadow-md"
+                                            >
+                                                <div>
+                                                    <div className="relative aspect-16/10 w-full overflow-hidden bg-slate-100">
+                                                        {article.image ? (
+                                                            <img
+                                                                src={article.image}
+                                                                alt={article.title}
+                                                                loading="lazy"
+                                                                className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center text-slate-300">
+                                                                <Newspaper className="size-10" />
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute left-3 top-3 flex items-center gap-1.5">
+                                                            <span className="rounded-md bg-white/95 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-600 shadow-xs backdrop-blur-xs">
+                                                                {article.category}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-5">
+                                                        <div className="flex items-center justify-between text-xs text-slate-400 border-b border-slate-100 pb-2.5">
+                                                            <span className="flex items-center gap-1.5 font-medium">
+                                                                <Calendar className="size-3.5 text-blue-600" />
+                                                                <span>{formatTanggal(article.published_at)}</span>
+                                                            </span>
+                                                            <span className="flex items-center gap-1 text-[11px]">
+                                                                <Clock className="size-3" />
+                                                                <span>3 mnt</span>
+                                                            </span>
+                                                        </div>
+
+                                                        <h3 className="mt-3 text-sm font-bold leading-snug text-slate-900 transition-colors group-hover:text-blue-600 line-clamp-2">
+                                                            {article.title}
+                                                        </h3>
+
+                                                        <p className="mt-1.5 text-xs font-medium leading-relaxed text-slate-500 line-clamp-3">
+                                                            {article.excerpt || 'Klik selengkapnya untuk membaca liputan lengkap dari HIMATIFA UMSURA.'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="px-5 pb-5">
+                                                    {article.link ? (
+                                                        <a
+                                                            href={article.link}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="group/btn inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition"
+                                                        >
+                                                            <span>
+                                                                {isKompasiana ? 'Baca di Kompasiana' : 'Baca selengkapnya'}
+                                                            </span>
+                                                            <ArrowUpRight className="size-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 font-medium">
+                                                            Tautan artikel belum tersedia
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </motion.article>
+                                        )
+                                    })}
+                                </motion.div>
+                            ) : (
+                                <div className="my-10 rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-xs">
+                                    <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 mb-3">
+                                        <Newspaper className="size-6" />
+                                    </div>
+                                    <h3 className="text-base font-bold text-slate-900">
+                                        Tidak ada berita ditemukan
+                                    </h3>
+                                    <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto font-medium">
+                                        Coba sesuaikan kata kunci pencarian atau ganti kategori filter.
+                                    </p>
+                                    <button
+                                        onClick={() => {
+                                            setSearchQuery('')
+                                            setSelectedCategory('Semua')
+                                        }}
+                                        className="mt-4 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                                    >
+                                        Reset Filter
+                                    </button>
+                                </div>
+                            )}
+                        </section>
+                    </>
+                )}
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
