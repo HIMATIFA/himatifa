@@ -9,10 +9,16 @@ import { type UserRole, roleDetails } from './Sidebar'
 interface HeaderProps {
     onToggleSidebar: () => void
     userRole?: UserRole
-    onRoleChange?: (role: UserRole) => void
+    userName?: string | null
+    userEmail?: string | null
 }
 
-export default function Header({ onToggleSidebar, userRole = 'admin', onRoleChange }: HeaderProps) {
+export default function Header({
+                                   onToggleSidebar,
+                                   userRole = 'admin',
+                                   userName,
+                                   userEmail,
+                               }: HeaderProps) {
     const pathname = usePathname()
     const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -30,7 +36,15 @@ export default function Header({ onToggleSidebar, userRole = 'admin', onRoleChan
         notulensi: 'Notulensi Rapat',
         lpj: 'LPJ & Anggaran Kegiatan',
         kas: 'Kas Organisasi',
-        adminekraf: 'Manajemen Ekraf'
+        adminekraf: 'Manajemen Ekraf',
+    }
+
+    const divisionLabels: Record<string, string> = {
+        admin: 'Pusat Kendali',
+        sekum: 'Sekretariat',
+        bendum: 'Keuangan',
+        adminekraf: 'Ekonomi Kreatif',
+        ekraf: 'Ekonomi Kreatif',
     }
 
     const segments = pathname.split('/').filter(Boolean)
@@ -39,6 +53,8 @@ export default function Header({ onToggleSidebar, userRole = 'admin', onRoleChan
 
     const normalizedRole = userRole === 'ekraf' ? 'adminekraf' : userRole
     const profile = roleDetails[normalizedRole] || roleDetails.admin
+    const divisionName = divisionLabels[normalizedRole] || 'SIM HIMATIFA'
+    const accountLabel = userName || userEmail || profile.title
 
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
@@ -66,7 +82,7 @@ export default function Header({ onToggleSidebar, userRole = 'admin', onRoleChan
                 </button>
 
                 <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                    <span className="hidden sm:inline">SIM HIMATIFA</span>
+                    <span className="hidden sm:inline">{divisionName}</span>
                     <ChevronRight className="hidden size-3 text-slate-300 sm:inline" />
                     <span className="font-bold capitalize text-slate-900">{pageTitle}</span>
                 </div>
@@ -74,9 +90,12 @@ export default function Header({ onToggleSidebar, userRole = 'admin', onRoleChan
 
             <div className="flex items-center gap-2.5">
                 {/* Active Role Badge */}
-                <div className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold ${profile.badgeBg}`}>
+                <div
+                    title={`Login sebagai: ${accountLabel}`}
+                    className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold ${profile.badgeBg}`}
+                >
                     <Shield className="size-3.5" />
-                    <span>Peran: {profile.title}</span>
+                    <span>{profile.title}</span>
                 </div>
 
                 <button

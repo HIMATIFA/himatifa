@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useTransition } from 'react'
 import {
     LayoutDashboard,
     Newspaper,
@@ -11,6 +11,7 @@ import {
     BarChart3,
     Folders,
     LogOut,
+    Loader2,
     FileText,
     ClipboardList,
     Wallet,
@@ -18,11 +19,11 @@ import {
     Store,
     FileCheck2,
     X,
-    ChevronDown,
     ShieldCheck
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
+import { logoutAction } from '@/app/actions/auth'
 
 export type UserRole = 'admin' | 'sekum' | 'bendum' | 'adminekraf' | 'ekraf'
 
@@ -46,66 +47,74 @@ interface SidebarProps {
     isMobileOpen?: boolean
     onCloseMobile?: () => void
     userRole?: UserRole
-    onRoleChange?: (role: UserRole) => void
+    userName?: string | null
+    userEmail?: string | null
 }
 
 export const roleDetails: Record<string, { name: string; title: string; badgeBg: string; textColor: string; avatar: string; homePath: string }> = {
     admin: {
-        name: 'Muhammad Arya',
+        name: 'Super Administrator',
         title: 'Super Administrator',
         badgeBg: 'bg-blue-100 text-blue-700 border-blue-200',
         textColor: 'text-blue-600',
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Arya',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Admin',
         homePath: '/admin'
     },
     sekum: {
-        name: 'Nabila Khansa',
+        name: 'Sekretaris Umum',
         title: 'Sekretaris Umum',
         badgeBg: 'bg-indigo-100 text-indigo-700 border-indigo-200',
         textColor: 'text-indigo-600',
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Nabila',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Sekum',
         homePath: '/sekum/surat'
     },
     bendum: {
-        name: 'Ahmad Fajar',
+        name: 'Bendahara Umum',
         title: 'Bendahara Umum',
         badgeBg: 'bg-emerald-100 text-emerald-700 border-emerald-200',
         textColor: 'text-emerald-600',
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Fajar',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Bendum',
         homePath: '/bendum/kas'
     },
     adminekraf: {
-        name: 'Rizky Pratama',
+        name: 'Admin Ekraf',
         title: 'Admin Ekraf',
         badgeBg: 'bg-amber-100 text-amber-700 border-amber-200',
         textColor: 'text-amber-600',
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Rizky',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Ekraf',
         homePath: '/adminekraf'
     },
     ekraf: {
-        name: 'Rizky Pratama',
+        name: 'Admin Ekraf',
         title: 'Admin Ekraf',
         badgeBg: 'bg-amber-100 text-amber-700 border-amber-200',
         textColor: 'text-amber-600',
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Rizky',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Ekraf',
         homePath: '/adminekraf'
     }
 }
 
 export default function Sidebar({
-    isCollapsed,
-    isMobileOpen = false,
-    onCloseMobile,
-    userRole = 'admin',
-    onRoleChange
-}: SidebarProps) {
+                                    isCollapsed,
+                                    isMobileOpen = false,
+                                    onCloseMobile,
+                                    userRole = 'admin',
+                                    userName,
+                                    userEmail
+                                }: SidebarProps) {
     const pathname = usePathname()
-    const router = useRouter()
-    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false)
+    const [isPending, startTransition] = useTransition()
 
     // Normalize ekraf to adminekraf
     const normalizedRole: UserRole = userRole === 'ekraf' ? 'adminekraf' : userRole
     const currentProfile = roleDetails[normalizedRole] || roleDetails.admin
+    const displayName = userName || userEmail || currentProfile.name
+
+    const handleLogout = () => {
+        startTransition(async () => {
+            await logoutAction()
+        })
+    }
 
     const isActive = (path: string) => {
         if (path === '/admin') return pathname === '/admin'
@@ -174,28 +183,6 @@ export default function Sidebar({
         }))
         .filter((section) => section.items.length > 0)
 
-    const handleSwitchRole = (newRole: UserRole) => {
-        setIsRoleDropdownOpen(false)
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('himatifa_user_role', newRole)
-        }
-        if (onRoleChange) {
-            onRoleChange(newRole)
-        }
-        // Redirect to new role's primary landing page
-        const target = roleDetails[newRole]?.homePath || '/admin'
-        router.push(target)
-    }
-
-    const handleLogout = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('himatifa_user_role')
-            localStorage.removeItem('himatifa_user_email')
-            localStorage.removeItem('himatifa_user_name')
-        }
-        router.push('/login')
-    }
-
     const renderNavContent = (collapsed: boolean, onNavClick?: () => void) => (
         <>
             {/* Header Brand */}
@@ -230,48 +217,15 @@ export default function Sidebar({
                 )}
             </div>
 
-            {/* Quick Simulation Role Badge & Switcher */}
+            {/* Active Role Badge */}
             {!collapsed && (
                 <div className="px-3 pt-3">
-                    <div className="relative">
-                        <button
-                            type="button"
-                            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-                            className="flex w-full items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer"
-                        >
-                            <div className="flex items-center gap-2 overflow-hidden">
-                                <ShieldCheck className="size-4 shrink-0 text-blue-600" />
-                                <div className="truncate">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akses Peran</p>
-                                    <p className="text-xs font-bold text-slate-900 truncate">{currentProfile.title}</p>
-                                </div>
-                            </div>
-                            <ChevronDown className="size-3.5 text-slate-400 shrink-0" />
-                        </button>
-
-                        {isRoleDropdownOpen && (
-                            <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                                <p className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                                    Ganti Simulasi Peran:
-                                </p>
-                                {(['admin', 'sekum', 'bendum', 'adminekraf'] as UserRole[]).map((r) => {
-                                    const prof = roleDetails[r]
-                                    const isCurrent = normalizedRole === r
-                                    return (
-                                        <button
-                                            key={r}
-                                            onClick={() => handleSwitchRole(r)}
-                                            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition cursor-pointer ${
-                                                isCurrent ? 'bg-blue-50 font-bold text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                                            }`}
-                                        >
-                                            <span>{prof.title}</span>
-                                            {isCurrent && <span className="text-[10px] font-bold text-blue-600">Aktif</span>}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        )}
+                    <div className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2.5">
+                        <ShieldCheck className={`size-4 shrink-0 ${currentProfile.textColor}`} />
+                        <div className="truncate">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akses Peran Aktif</p>
+                            <p className="text-xs font-bold text-slate-900 truncate">{currentProfile.title}</p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -333,37 +287,43 @@ export default function Sidebar({
                 ))}
             </div>
 
-            {/* Profile Footer */}
+            {/* Profile Footer & Logout */}
             <div className="border-t border-slate-100 p-3">
                 <div
                     className={`flex items-center rounded-xl p-2 transition-colors hover:bg-slate-50 ${
-                        collapsed ? 'justify-center' : 'gap-3'
+                        collapsed ? 'flex-col justify-center gap-2' : 'gap-3'
                     }`}
                 >
                     <div className="size-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
                         <img
-                            src={currentProfile.avatar}
+                            src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(displayName)}`}
                             alt="User Avatar"
                             className="size-full object-cover"
                         />
                     </div>
+
                     {!collapsed && (
-                        <>
-                            <div className="flex-1 overflow-hidden">
-                                <p className="truncate text-xs font-bold text-slate-900">{currentProfile.name}</p>
-                                <p className="truncate text-[10px] font-semibold text-slate-400">
-                                    {currentProfile.title}
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                title="Keluar dari akun simulasi"
-                                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
-                            >
-                                <LogOut className="size-4" />
-                            </button>
-                        </>
+                        <div className="flex-1 overflow-hidden">
+                            <p className="truncate text-xs font-bold text-slate-900">{displayName}</p>
+                            <p className="truncate text-[10px] font-semibold text-slate-400">
+                                {currentProfile.title}
+                            </p>
+                        </div>
                     )}
+
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        disabled={isPending}
+                        title="Keluar dari akun"
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 transition cursor-pointer"
+                    >
+                        {isPending ? (
+                            <Loader2 className="size-4 animate-spin text-red-600" />
+                        ) : (
+                            <LogOut className="size-4" />
+                        )}
+                    </button>
                 </div>
             </div>
         </>
