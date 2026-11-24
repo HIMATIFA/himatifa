@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
     LayoutDashboard,
     Newspaper,
@@ -17,11 +18,13 @@ import {
     Store,
     FileCheck2,
     X,
+    ChevronDown,
+    ShieldCheck
 } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
-export type UserRole = 'admin' | 'sekum' | 'bendum' | 'ekraf'
+export type UserRole = 'admin' | 'sekum' | 'bendum' | 'adminekraf' | 'ekraf'
 
 interface NavItem {
     id: string
@@ -43,6 +46,50 @@ interface SidebarProps {
     isMobileOpen?: boolean
     onCloseMobile?: () => void
     userRole?: UserRole
+    onRoleChange?: (role: UserRole) => void
+}
+
+export const roleDetails: Record<string, { name: string; title: string; badgeBg: string; textColor: string; avatar: string; homePath: string }> = {
+    admin: {
+        name: 'Muhammad Arya',
+        title: 'Super Administrator',
+        badgeBg: 'bg-blue-100 text-blue-700 border-blue-200',
+        textColor: 'text-blue-600',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Arya',
+        homePath: '/admin'
+    },
+    sekum: {
+        name: 'Nabila Khansa',
+        title: 'Sekretaris Umum',
+        badgeBg: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        textColor: 'text-indigo-600',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Nabila',
+        homePath: '/sekum/surat'
+    },
+    bendum: {
+        name: 'Ahmad Fajar',
+        title: 'Bendahara Umum',
+        badgeBg: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        textColor: 'text-emerald-600',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Fajar',
+        homePath: '/bendum/kas'
+    },
+    adminekraf: {
+        name: 'Rizky Pratama',
+        title: 'Admin Ekraf',
+        badgeBg: 'bg-amber-100 text-amber-700 border-amber-200',
+        textColor: 'text-amber-600',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Rizky',
+        homePath: '/adminekraf'
+    },
+    ekraf: {
+        name: 'Rizky Pratama',
+        title: 'Admin Ekraf',
+        badgeBg: 'bg-amber-100 text-amber-700 border-amber-200',
+        textColor: 'text-amber-600',
+        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Rizky',
+        homePath: '/adminekraf'
+    }
 }
 
 export default function Sidebar({
@@ -50,30 +97,39 @@ export default function Sidebar({
     isMobileOpen = false,
     onCloseMobile,
     userRole = 'admin',
+    onRoleChange
 }: SidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
+    const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false)
+
+    // Normalize ekraf to adminekraf
+    const normalizedRole: UserRole = userRole === 'ekraf' ? 'adminekraf' : userRole
+    const currentProfile = roleDetails[normalizedRole] || roleDetails.admin
 
     const isActive = (path: string) => {
         if (path === '/admin') return pathname === '/admin'
         return pathname.startsWith(path)
     }
 
+    // Role-based Nav Sections strictly mapped
     const masterNavSections: NavSection[] = [
         {
             title: 'Overview',
-            roles: ['admin', 'sekum', 'bendum', 'ekraf'],
+            roles: ['admin'],
             items: [
                 { id: 'dashboard', label: 'Dashboard Overview', path: '/admin', icon: LayoutDashboard },
-                { id: 'analytics', label: 'Site Analytics', path: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
+                { id: 'analytics', label: 'Site Analytics', path: '/admin/analytics', icon: BarChart3 },
             ],
         },
         {
             title: 'Sekretariat (Sekum)',
             roles: ['admin', 'sekum'],
             items: [
+                { id: 'lpj', label: 'LPJ & Anggaran', path: '/sekum/lpj', icon: Receipt },
                 { id: 'surat', label: 'Persuratan & SK', path: '/sekum/surat', icon: FileText, count: 3 },
-                { id: 'notulensi', label: 'Notulensi Rapat', path: '/sekum/notulensi', icon: ClipboardList },
                 { id: 'presensi', label: 'Presensi Pengurus', path: '/sekum/presensi', icon: FileCheck2 },
+                { id: 'notulensi', label: 'Notulensi Rapat', path: '/sekum/notulensi', icon: ClipboardList },
             ],
         },
         {
@@ -81,12 +137,11 @@ export default function Sidebar({
             roles: ['admin', 'bendum'],
             items: [
                 { id: 'kas', label: 'Kas Organisasi', path: '/bendum/kas', icon: Wallet },
-                { id: 'lpj', label: 'LPJ & Anggaran', path: '/bendum/lpj', icon: Receipt },
             ],
         },
         {
             title: 'Ekonomi Kreatif',
-            roles: ['admin', 'ekraf', 'bendum'],
+            roles: ['admin', 'adminekraf', 'ekraf'],
             items: [
                 { id: 'adminekraf', label: 'Manajemen Ekraf', path: '/adminekraf', icon: Store, count: 4 },
             ],
@@ -112,14 +167,38 @@ export default function Sidebar({
     ]
 
     const filteredSections = masterNavSections
-        .filter((section) => section.roles.includes(userRole))
+        .filter((section) => section.roles.includes(normalizedRole))
         .map((section) => ({
             ...section,
-            items: section.items.filter((item) => !item.roles || item.roles.includes(userRole)),
+            items: section.items.filter((item) => !item.roles || item.roles.includes(normalizedRole)),
         }))
+        .filter((section) => section.items.length > 0)
+
+    const handleSwitchRole = (newRole: UserRole) => {
+        setIsRoleDropdownOpen(false)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('himatifa_user_role', newRole)
+        }
+        if (onRoleChange) {
+            onRoleChange(newRole)
+        }
+        // Redirect to new role's primary landing page
+        const target = roleDetails[newRole]?.homePath || '/admin'
+        router.push(target)
+    }
+
+    const handleLogout = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('himatifa_user_role')
+            localStorage.removeItem('himatifa_user_email')
+            localStorage.removeItem('himatifa_user_name')
+        }
+        router.push('/login')
+    }
 
     const renderNavContent = (collapsed: boolean, onNavClick?: () => void) => (
         <>
+            {/* Header Brand */}
             <div
                 className={`flex h-16 shrink-0 items-center justify-between border-b border-slate-100 ${
                     collapsed ? 'justify-center px-2' : 'gap-3 px-6'
@@ -143,7 +222,7 @@ export default function Sidebar({
                 {onNavClick && (
                     <button
                         onClick={onCloseMobile}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 md:hidden"
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 md:hidden cursor-pointer"
                         aria-label="Tutup menu"
                     >
                         <X className="size-5" />
@@ -151,7 +230,54 @@ export default function Sidebar({
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-3 py-5 scrollbar-none space-y-6">
+            {/* Quick Simulation Role Badge & Switcher */}
+            {!collapsed && (
+                <div className="px-3 pt-3">
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                            className="flex w-full items-center justify-between rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2 text-left transition hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer"
+                        >
+                            <div className="flex items-center gap-2 overflow-hidden">
+                                <ShieldCheck className="size-4 shrink-0 text-blue-600" />
+                                <div className="truncate">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Akses Peran</p>
+                                    <p className="text-xs font-bold text-slate-900 truncate">{currentProfile.title}</p>
+                                </div>
+                            </div>
+                            <ChevronDown className="size-3.5 text-slate-400 shrink-0" />
+                        </button>
+
+                        {isRoleDropdownOpen && (
+                            <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                                <p className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                    Ganti Simulasi Peran:
+                                </p>
+                                {(['admin', 'sekum', 'bendum', 'adminekraf'] as UserRole[]).map((r) => {
+                                    const prof = roleDetails[r]
+                                    const isCurrent = normalizedRole === r
+                                    return (
+                                        <button
+                                            key={r}
+                                            onClick={() => handleSwitchRole(r)}
+                                            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition cursor-pointer ${
+                                                isCurrent ? 'bg-blue-50 font-bold text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                            }`}
+                                        >
+                                            <span>{prof.title}</span>
+                                            {isCurrent && <span className="text-[10px] font-bold text-blue-600">Aktif</span>}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Nav Menu Items */}
+            <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-none space-y-5">
                 {filteredSections.map((section, idx) => (
                     <div key={idx}>
                         {!collapsed && (
@@ -207,6 +333,7 @@ export default function Sidebar({
                 ))}
             </div>
 
+            {/* Profile Footer */}
             <div className="border-t border-slate-100 p-3">
                 <div
                     className={`flex items-center rounded-xl p-2 transition-colors hover:bg-slate-50 ${
@@ -215,7 +342,7 @@ export default function Sidebar({
                 >
                     <div className="size-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
                         <img
-                            src="https://api.dicebear.com/7.x/notionists/svg?seed=Arya"
+                            src={currentProfile.avatar}
                             alt="User Avatar"
                             className="size-full object-cover"
                         />
@@ -223,18 +350,18 @@ export default function Sidebar({
                     {!collapsed && (
                         <>
                             <div className="flex-1 overflow-hidden">
-                                <p className="truncate text-xs font-bold text-slate-900">Muhammad Arya</p>
-                                <p className="truncate text-[10px] font-medium text-slate-400 capitalize">
-                                    {userRole === 'admin' ? 'Super Administrator' : `Pengurus (${userRole})`}
+                                <p className="truncate text-xs font-bold text-slate-900">{currentProfile.name}</p>
+                                <p className="truncate text-[10px] font-semibold text-slate-400">
+                                    {currentProfile.title}
                                 </p>
                             </div>
-                            <Link
-                                href="/login"
-                                title="Keluar dari akun"
-                                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                            <button
+                                onClick={handleLogout}
+                                title="Keluar dari akun simulasi"
+                                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
                             >
                                 <LogOut className="size-4" />
-                            </Link>
+                            </button>
                         </>
                     )}
                 </div>

@@ -9,8 +9,8 @@ export interface ProductVariant {
 
 export interface DigitalProduct {
     category: string
-    tag: 'AI Tools' | 'Streaming' | 'Creative'
-    iconName: 'Bot' | 'Sparkles' | 'Film' | 'Tv' | 'Palette' | 'Scissors' | 'ImageIcon' | 'BookOpen'
+    tag: 'AI Tools' | 'Streaming' | 'Creative' | 'Merchandise'
+    iconName: 'Bot' | 'Sparkles' | 'Film' | 'Tv' | 'Palette' | 'Scissors' | 'ImageIcon' | 'BookOpen' | 'ShoppingBag' | 'Shirt'
     variants: ProductVariant[]
 }
 
@@ -24,7 +24,7 @@ export interface TechService {
 
 export const digitalProducts: DigitalProduct[] = [
     {
-        category: 'ChatGPT',
+        category: 'ChatGPT Plus',
         tag: 'AI Tools',
         iconName: 'Bot',
         variants: [
@@ -35,7 +35,7 @@ export const digitalProducts: DigitalProduct[] = [
         ]
     },
     {
-        category: 'Gemini Plus',
+        category: 'Gemini Advanced',
         tag: 'AI Tools',
         iconName: 'Sparkles',
         variants: [
@@ -84,7 +84,7 @@ export const digitalProducts: DigitalProduct[] = [
         ]
     },
     {
-        category: 'Lightroom',
+        category: 'Lightroom Premium',
         tag: 'Creative',
         iconName: 'ImageIcon',
         variants: [
@@ -100,6 +100,24 @@ export const digitalProducts: DigitalProduct[] = [
             { name: 'Private (1 Bulan)', price: 15500, priceLabel: 'Rp 15.500' },
             { name: 'Sharing (1 Bulan)', price: 10500, priceLabel: 'Rp 10.500' },
             { name: 'Sharing (1 Tahun)', price: 15500, priceLabel: 'Rp 15.500', isPopular: true },
+        ]
+    },
+    {
+        category: 'Lanyard HIMATIFA',
+        tag: 'Merchandise',
+        iconName: 'ShoppingBag',
+        variants: [
+            { name: 'Edisi Navy 2026 (Clip Standard)', price: 25000, priceLabel: 'Rp 25.000', isPopular: true },
+            { name: 'Edisi Hitam Glossy (Hook Logam)', price: 30000, priceLabel: 'Rp 30.000' },
+        ]
+    },
+    {
+        category: 'PDH Resmi HIMATIFA',
+        tag: 'Merchandise',
+        iconName: 'Shirt',
+        variants: [
+            { name: 'Pre-Order Size S - L', price: 165000, priceLabel: 'Rp 165.000', isPopular: true },
+            { name: 'Pre-Order Size XL - XXL', price: 175000, priceLabel: 'Rp 175.000' },
         ]
     }
 ]

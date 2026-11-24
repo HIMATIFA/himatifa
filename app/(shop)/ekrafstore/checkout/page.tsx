@@ -16,7 +16,8 @@ import {
     Phone,
     User,
     ArrowRight,
-    AlertCircle
+    AlertCircle,
+    Clock
 } from 'lucide-react'
 
 type PaymentMethod = 'qris' | 'transfer' | 'cod'
@@ -368,9 +369,9 @@ export default function CheckoutPage() {
 
                             <div className="grid gap-3 sm:grid-cols-3">
                                 {[
-                                    { id: 'qris', label: 'QRIS Instant', desc: 'Scan Semua E-Wallet & M-Banking', icon: QrCode },
-                                    { id: 'transfer', label: 'Transfer Bank', desc: 'Virtual Account / Rekening', icon: CreditCard },
-                                    { id: 'cod', label: 'Bayar di Sekre', desc: 'Cash / Pengambilan Direct', icon: Store },
+                                    { id: 'qris', label: 'QRIS Dinamis (24 Jam)', desc: 'Generate QRIS otomatis & instan', icon: QrCode },
+                                    { id: 'transfer', label: 'Transfer Bank (24 Jam)', desc: 'Virtual Account BSI, Mandiri, BCA', icon: CreditCard },
+                                    { id: 'cod', label: 'Bayar di Sekre', desc: 'Cash / Pengambilan di Sekre G.3', icon: Store },
                                 ].map((method) => {
                                     const isSelected = paymentMethod === method.id
 
@@ -410,6 +411,15 @@ export default function CheckoutPage() {
                                     )
                                 })}
                             </div>
+
+                            {paymentMethod !== 'cod' && (
+                                <div className="mt-3.5 flex items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 text-xs text-amber-900 font-medium">
+                                    <Clock className="size-4 shrink-0 text-amber-600" />
+                                    <span>
+                                        <strong>Masa Berlaku 24 Jam:</strong> Tagihan QRIS maupun transfer bank akan otomatis kadaluarsa jika tidak diselesaikan dalam 24 jam.
+                                    </span>
+                                </div>
+                            )}
 
                             {paymentMethod === 'transfer' && (
                                 <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">

@@ -126,9 +126,14 @@ export function Footer() {
                         <Copyright className="size-3.5 shrink-0" />
                         <span>{new Date().getFullYear()} HIMATIFA UMSURA. Hak Cipta Dilindungi.</span>
                     </p>
-                    <p className="uppercase tracking-wider font-semibold text-[10px] text-slate-400">
-                        Dikembangkan oleh Departemen Medkominfo
-                    </p>
+                    <div className="flex items-center gap-4">
+                        <Link href="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition">
+                            Login Internal SIM &rarr;
+                        </Link>
+                        <p className="uppercase tracking-wider font-semibold text-[10px] text-slate-400">
+                            Dikembangkan oleh Departemen Medkominfo
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>
