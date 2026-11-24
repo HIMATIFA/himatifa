@@ -1185,28 +1185,28 @@ export const recentDiscussions: DiscussionItem[] = [
 
 export const container: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+    show: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
 }
 
 export const heroContainer: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.15, delayChildren: 0.2 } },
+    show: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } },
 }
 
 export const revealStagger: Variants = {
-    hidden: { opacity: 0, y: 30, filter: 'blur(4px)' },
+    hidden: { opacity: 0, y: 8 },
     show: {
-        opacity: 1, y: 0, filter: 'blur(0px)',
-        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+        opacity: 1, y: 0,
+        transition: { duration: 0.3, ease: 'easeOut' },
     },
 }
 
 export const heroItem: Variants = {
-    hidden: { opacity: 0, y: 32 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+    hidden: { opacity: 0, y: 8 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 }
 
-export const reveal = {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.65 } }
+export const reveal: Variants = {
+    hidden: { opacity: 0, y: 6 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.28, ease: 'easeOut' } }
 }

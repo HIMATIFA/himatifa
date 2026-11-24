@@ -12,6 +12,8 @@
     --color-primary-foreground: var(--primary-foreground);
     --color-border: var(--border);
     --color-ring: var(--ring);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
     --radius-xl: 1.25rem;
     --radius-2xl: 1.5rem;
     --radius-3xl: 2rem;
@@ -25,6 +27,8 @@
   --primary-foreground: oklch(1 0 0);
   --border: oklch(0.9 0.02 240);
   --ring: oklch(0.55 0.22 255);
+  --muted: oklch(0.95 0.01 240);
+  --muted-foreground: oklch(0.48 0.03 245);
 }
 
 * { box-sizing: border-box; }

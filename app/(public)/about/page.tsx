@@ -36,15 +36,15 @@ import {
 
 const container: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+    show: { transition: { staggerChildren: 0.04, delayChildren: 0.02 } },
 }
 
 const reveal: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 6 },
     show: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+        transition: { duration: 0.25, ease: 'easeOut' },
     },
 }
 
@@ -104,25 +104,23 @@ export default function AboutPage() {
     }
 
     return (
-        <main className="relative min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
+        <main className="relative min-h-screen bg-transparent text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
             <motion.div
                 style={{ scaleX: progressScale }}
-                className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-blue-600"
+                className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600"
                 aria-hidden
             />
 
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-40" />
-
             <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
                 <motion.div
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-6"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 pb-6"
                 >
                     <Link
                         href="/"
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
+                        className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/90 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs backdrop-blur-sm transition hover:border-blue-300 hover:bg-white hover:text-blue-600 active:scale-[0.98]"
                     >
                         <ArrowLeft className="size-3.5" />
                         <span>Kembali ke Beranda</span>
@@ -143,19 +141,19 @@ export default function AboutPage() {
                     variants={container}
                     className="mt-8 mb-10 sm:mb-14 max-w-3xl"
                 >
-                    <motion.div variants={reveal} className="flex items-center gap-3 mb-3">
-                        <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
-                        <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
-                            Profil & Visi Misi Resmi
-                        </span>
+                    <motion.div variants={reveal} className="inline-flex items-center gap-2.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-3.5 py-1.5 text-xs font-bold text-blue-700 mb-4 backdrop-blur-sm shadow-xs">
+                        <span className="size-2 rounded-full bg-blue-600 animate-pulse" />
+                        <span className="tracking-wide uppercase text-[10px]">Profil & Visi Misi Resmi</span>
                     </motion.div>
                     <motion.h1 variants={reveal} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                        Mengenal Lebih Dekat <span className="text-blue-600">HIMATIFA</span>
+                        Mengenal Lebih Dekat <span className="feed-text-gradient">HIMATIFA</span>
                     </motion.h1>
-                    <motion.p variants={reveal} className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
+                    <motion.p variants={reveal} className="mt-3.5 text-sm sm:text-base leading-relaxed text-slate-600 font-normal">
                         Himpunan Mahasiswa Informatika Universitas Muhammadiyah Surabaya adalah ruang tumbuh kolaboratif yang menaungi aspirasi, karya teknologi, dan pembinaan karakter insan akademis.
                     </motion.p>
                 </motion.div>
+
+                <div className="feed-line-gradient my-8 sm:my-10 opacity-70" />
 
                 <motion.div
                     initial="hidden"
@@ -435,17 +433,6 @@ export default function AboutPage() {
                         </Link>
                     </div>
                 </motion.div>
-
-                <footer className="mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 pb-4 text-xs font-medium text-slate-400 sm:flex-row">
-                    <p className="flex items-center gap-1.5">
-                        <Copyright className="size-3.5" /> {new Date().getFullYear()} HIMATIFA UMSURA
-                    </p>
-                    <div className="flex items-center gap-4 text-slate-500">
-                        <Link href="/" className="hover:text-blue-600 transition">Beranda</Link>
-                        <Link href="/news" className="hover:text-blue-600 transition">Berita</Link>
-                        <Link href="/contact" className="hover:text-blue-600 transition">Kontak</Link>
-                    </div>
-                </footer>
             </div>
 
             <BackToTop />

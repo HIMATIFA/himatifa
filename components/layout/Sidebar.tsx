@@ -15,19 +15,42 @@ import {
     Wallet,
     Receipt,
     Store,
-    FileCheck2
+    FileCheck2,
+    X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 export type UserRole = 'admin' | 'sekum' | 'bendum' | 'ekraf'
 
+interface NavItem {
+    id: string
+    label: string
+    path: string
+    icon: React.ElementType
+    roles?: UserRole[]
+    count?: number
+}
+
+interface NavSection {
+    title: string
+    roles: UserRole[]
+    items: NavItem[]
+}
+
 interface SidebarProps {
     isCollapsed: boolean
+    isMobileOpen?: boolean
+    onCloseMobile?: () => void
     userRole?: UserRole
 }
 
-export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProps) {
+export default function Sidebar({
+    isCollapsed,
+    isMobileOpen = false,
+    onCloseMobile,
+    userRole = 'admin',
+}: SidebarProps) {
     const pathname = usePathname()
 
     const isActive = (path: string) => {
@@ -35,14 +58,14 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
         return pathname.startsWith(path)
     }
 
-    const masterNavSections = [
+    const masterNavSections: NavSection[] = [
         {
             title: 'Overview',
             roles: ['admin', 'sekum', 'bendum', 'ekraf'],
             items: [
                 { id: 'dashboard', label: 'Dashboard Overview', path: '/admin', icon: LayoutDashboard },
                 { id: 'analytics', label: 'Site Analytics', path: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
-            ]
+            ],
         },
         {
             title: 'Sekretariat (Sekum)',
@@ -51,7 +74,7 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                 { id: 'surat', label: 'Persuratan & SK', path: '/sekum/surat', icon: FileText, count: 3 },
                 { id: 'notulensi', label: 'Notulensi Rapat', path: '/sekum/notulensi', icon: ClipboardList },
                 { id: 'presensi', label: 'Presensi Pengurus', path: '/sekum/presensi', icon: FileCheck2 },
-            ]
+            ],
         },
         {
             title: 'Keuangan (Bendum)',
@@ -59,14 +82,14 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
             items: [
                 { id: 'kas', label: 'Kas Organisasi', path: '/bendum/kas', icon: Wallet },
                 { id: 'lpj', label: 'LPJ & Anggaran', path: '/bendum/lpj', icon: Receipt },
-            ]
+            ],
         },
         {
             title: 'Ekonomi Kreatif',
             roles: ['admin', 'ekraf', 'bendum'],
             items: [
                 { id: 'adminekraf', label: 'Manajemen Ekraf', path: '/adminekraf', icon: Store, count: 4 },
-            ]
+            ],
         },
         {
             title: 'Content & Media',
@@ -76,7 +99,7 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                 { id: 'agenda', label: 'Agenda Kegiatan', path: '/admin/agenda', icon: CalendarDays, count: 5 },
                 { id: 'bph', label: 'Struktur BPH', path: '/admin/bph', icon: Users },
                 { id: 'kategori', label: 'Kategori Modul', path: '/admin/kategori', icon: Folders },
-            ]
+            ],
         },
         {
             title: 'System',
@@ -84,45 +107,54 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
             items: [
                 { id: 'media', label: 'Media Library', path: '/admin/media', icon: ImageIcon },
                 { id: 'pengaturan', label: 'Pengaturan Web', path: '/admin/pengaturan', icon: Settings },
-            ]
-        }
+            ],
+        },
     ]
 
     const filteredSections = masterNavSections
         .filter((section) => section.roles.includes(userRole))
         .map((section) => ({
             ...section,
-            items: section.items.filter((item) => !item.roles || item.roles.includes(userRole))
+            items: section.items.filter((item) => !item.roles || item.roles.includes(userRole)),
         }))
 
-    return (
-        <aside
-            className={`flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out ${
-                isCollapsed ? 'w-20' : 'w-[280px]'
-            }`}
-        >
+    const renderNavContent = (collapsed: boolean, onNavClick?: () => void) => (
+        <>
             <div
-                className={`flex h-16 shrink-0 items-center border-b border-slate-100 ${
-                    isCollapsed ? 'justify-center px-2' : 'gap-3 px-6'
+                className={`flex h-16 shrink-0 items-center justify-between border-b border-slate-100 ${
+                    collapsed ? 'justify-center px-2' : 'gap-3 px-6'
                 }`}
             >
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-extrabold text-white shadow-xs">
-                    <span>H</span>
-                </div>
-                {!isCollapsed && (
-                    <div className="overflow-hidden whitespace-nowrap">
-                        <h1 className="text-xs font-black tracking-wider text-slate-900 uppercase">
-                            SIM HIMATIFA
-                        </h1>
-                        <p className="text-[10px] font-semibold text-slate-400">Workspace Management</p>
+                <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-extrabold text-white shadow-xs">
+                        <span>H</span>
                     </div>
+                    {!collapsed && (
+                        <div className="overflow-hidden whitespace-nowrap">
+                            <h1 className="text-xs font-black tracking-wider text-slate-900 uppercase">
+                                SIM HIMATIFA
+                            </h1>
+                            <p className="text-[10px] font-semibold text-slate-400">Workspace Management</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Close Button for mobile drawer */}
+                {onNavClick && (
+                    <button
+                        onClick={onCloseMobile}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 md:hidden"
+                        aria-label="Tutup menu"
+                    >
+                        <X className="size-5" />
+                    </button>
                 )}
             </div>
 
             <div className="flex-1 overflow-y-auto px-3 py-5 scrollbar-none space-y-6">
                 {filteredSections.map((section, idx) => (
                     <div key={idx}>
-                        {!isCollapsed && (
+                        {!collapsed && (
                             <p className="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                                 {section.title}
                             </p>
@@ -135,16 +167,17 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                                     <Link
                                         key={item.id}
                                         href={item.path}
-                                        title={isCollapsed ? item.label : undefined}
+                                        onClick={onNavClick}
+                                        title={collapsed ? item.label : undefined}
                                         className={`group/btn flex items-center rounded-xl py-2.5 text-xs font-bold transition-all ${
-                                            isCollapsed ? 'justify-center px-0' : 'justify-between px-3'
+                                            collapsed ? 'justify-center px-0' : 'justify-between px-3'
                                         } ${
                                             active
                                                 ? 'bg-blue-50 text-blue-600 shadow-2xs'
                                                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                         }`}
                                     >
-                                        <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
+                                        <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
                                             <item.icon
                                                 className={`size-4 shrink-0 transition-colors ${
                                                     active
@@ -152,10 +185,10 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                                                         : 'text-slate-400 group-hover/btn:text-slate-600'
                                                 }`}
                                             />
-                                            {!isCollapsed && <span>{item.label}</span>}
+                                            {!collapsed && <span>{item.label}</span>}
                                         </div>
 
-                                        {!isCollapsed && item.count !== undefined && (
+                                        {!collapsed && item.count !== undefined && (
                                             <span
                                                 className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
                                                     active
@@ -177,7 +210,7 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
             <div className="border-t border-slate-100 p-3">
                 <div
                     className={`flex items-center rounded-xl p-2 transition-colors hover:bg-slate-50 ${
-                        isCollapsed ? 'justify-center' : 'gap-3'
+                        collapsed ? 'justify-center' : 'gap-3'
                     }`}
                 >
                     <div className="size-9 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
@@ -187,7 +220,7 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                             className="size-full object-cover"
                         />
                     </div>
-                    {!isCollapsed && (
+                    {!collapsed && (
                         <>
                             <div className="flex-1 overflow-hidden">
                                 <p className="truncate text-xs font-bold text-slate-900">Muhammad Arya</p>
@@ -206,6 +239,32 @@ export default function Sidebar({ isCollapsed, userRole = 'admin' }: SidebarProp
                     )}
                 </div>
             </div>
-        </aside>
+        </>
+    )
+
+    return (
+        <>
+            {/* 1. Desktop & Tablet Sidebar */}
+            <aside
+                className={`hidden md:flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out ${
+                    isCollapsed ? 'w-20' : 'w-[280px]'
+                }`}
+            >
+                {renderNavContent(isCollapsed)}
+            </aside>
+
+            {/* 2. Mobile Drawer & Backdrop */}
+            {isMobileOpen && (
+                <div className="fixed inset-0 z-50 flex md:hidden">
+                    <div
+                        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+                        onClick={onCloseMobile}
+                    />
+                    <aside className="relative flex w-[280px] max-w-[85vw] flex-col bg-white shadow-2xl z-10">
+                        {renderNavContent(false, onCloseMobile)}
+                    </aside>
+                </div>
+            )}
+        </>
     )
 }

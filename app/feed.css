@@ -1,0 +1,250 @@
+/* =========================================================================
+   HIMATIFA PUBLIC PORTAL — FEED.CSS
+   Koleksi utilitas visual, gradient garis-garis, grid kotak-kotak, dan
+   dekorasi visual modern yang estetis, hidup, dan selaras dengan globals.css.
+   ========================================================================= */
+
+@layer utilities {
+    /* 1. Background Grid Garis Kotak-Kotak (Crisp, High Visibility untuk Light Background) */
+    .feed-grid-squares {
+        background-size: 36px 36px;
+        background-image: 
+            linear-gradient(to right, rgba(37, 99, 235, 0.10) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(37, 99, 235, 0.10) 1px, transparent 1px);
+    }
+
+    @media (min-width: 640px) {
+        .feed-grid-squares {
+            background-size: 44px 44px;
+            background-image: 
+                linear-gradient(to right, rgba(37, 99, 235, 0.12) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(37, 99, 235, 0.12) 1px, transparent 1px);
+        }
+    }
+
+    /* Pola Kotak-Kotak Khusus Hero (Sangat Tipis & Halus) */
+    .feed-grid-hero {
+        background-size: 40px 40px;
+        background-image: 
+            linear-gradient(to right, rgba(96, 165, 250, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(96, 165, 250, 0.05) 1px, transparent 1px);
+    }
+
+    @media (min-width: 640px) {
+        .feed-grid-hero {
+            background-size: 52px 52px;
+            background-image: 
+                linear-gradient(to right, rgba(96, 165, 250, 0.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(96, 165, 250, 0.06) 1px, transparent 1px);
+        }
+    }
+
+    /* Pola Kotak-Kotak Halus Slate (Netral & Elegan) */
+    .feed-grid-slate {
+        background-size: 40px 40px;
+        background-image: 
+            linear-gradient(to right, rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+    }
+
+    /* Pola Kotak-Kotak dengan Mask Radial Halus (Memudar di Pinggir) */
+    .feed-grid-masked {
+        mask-image: radial-gradient(ellipse 95% 80% at 50% 20%, #000 75%, transparent 100%);
+        -webkit-mask-image: radial-gradient(ellipse 95% 80% at 50% 20%, #000 75%, transparent 100%);
+    }
+
+    /* 2. Section Backgrounds dengan Opacity (Garis Kotak-Kotak Tetap Tembus Terlihat) */
+    .feed-section-white {
+        background-color: rgba(255, 255, 255, 0.70);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .feed-section-slate {
+        background-color: rgba(248, 250, 252, 0.65);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .feed-section-blue {
+        background-color: rgba(239, 246, 255, 0.50);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* 3. Background Stripes Diagonal Halus (Decor) */
+    .feed-stripes {
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(37, 99, 235, 0.08),
+            rgba(37, 99, 235, 0.08) 1.5px,
+            transparent 1.5px,
+            transparent 10px
+        );
+    }
+
+    .feed-stripes-dense {
+        background-image: repeating-linear-gradient(
+            -45deg,
+            rgba(37, 99, 235, 0.12),
+            rgba(37, 99, 235, 0.12) 1px,
+            transparent 1px,
+            transparent 6px
+        );
+    }
+
+    /* 4. Dot Matrix Grid Decor */
+    .feed-dots {
+        background-image: radial-gradient(
+            rgba(37, 99, 235, 0.18) 1.5px,
+            transparent 1.5px
+        );
+        background-size: 24px 24px;
+    }
+
+    /* 5. Gradient Accent Lines (Garis Aksen Bergradasi) */
+    .feed-line-gradient {
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(37, 99, 235, 0.7) 25%,
+            #2563eb 50%,
+            rgba(37, 99, 235, 0.7) 75%,
+            transparent
+        );
+    }
+
+    .feed-line-left {
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            #2563eb,
+            rgba(37, 99, 235, 0.3) 70%,
+            transparent
+        );
+    }
+
+    /* 6. Ambient Gradient Glow Orbs (Memberi Kedalaman Ruang) */
+    .feed-glow-orb-primary {
+        position: absolute;
+        pointer-events: none;
+        border-radius: 9999px;
+        filter: blur(100px);
+        background: radial-gradient(
+            circle,
+            rgba(37, 99, 235, 0.22) 0%,
+            rgba(14, 165, 233, 0.12) 45%,
+            transparent 70%
+        );
+    }
+
+    .feed-glow-orb-secondary {
+        position: absolute;
+        pointer-events: none;
+        border-radius: 9999px;
+        filter: blur(110px);
+        background: radial-gradient(
+            circle,
+            rgba(99, 102, 241, 0.18) 0%,
+            rgba(37, 99, 235, 0.10) 50%,
+            transparent 70%
+        );
+    }
+
+    .feed-glow-orb-cyan {
+        position: absolute;
+        pointer-events: none;
+        border-radius: 9999px;
+        filter: blur(90px);
+        background: radial-gradient(
+            circle,
+            rgba(6, 182, 212, 0.18) 0%,
+            rgba(59, 130, 246, 0.08) 50%,
+            transparent 70%
+        );
+    }
+
+    /* 7. Card Decor & Gradient Borders */
+    .feed-card-glow {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.25rem;
+        border: 1px solid rgba(226, 232, 240, 0.85);
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feed-card-glow:hover {
+        border-color: rgba(96, 165, 250, 0.7);
+        box-shadow: 0 12px 30px -4px rgba(37, 99, 235, 0.12);
+        transform: translateY(-3px);
+    }
+
+    /* Top Gradient Accent Strip untuk Card */
+    .feed-card-top-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #2563eb, #38bdf8, #6366f1);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .feed-card-glow:hover .feed-card-top-line {
+        opacity: 1;
+    }
+
+    /* 8. Pill & Badge Decor */
+    .feed-badge-gradient {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(240, 249, 255, 0.9));
+        padding: 0.35rem 0.85rem;
+        box-shadow: 0 1px 3px 0 rgba(37, 99, 235, 0.08);
+    }
+
+    /* 9. Text Gradient */
+    .feed-text-gradient {
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #0284c7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* 10. Standar Container */
+    .feed-container {
+        width: 100%;
+        max-width: 72rem;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 2rem;
+        padding-bottom: 2.5rem;
+    }
+
+    @media (min-width: 640px) {
+        .feed-container {
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            padding-top: 2.5rem;
+            padding-bottom: 3.5rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .feed-container {
+            padding-left: 2rem;
+            padding-right: 2rem;
+            padding-top: 3rem;
+            padding-bottom: 4.5rem;
+        }
+    }
+}
