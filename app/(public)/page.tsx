@@ -109,6 +109,28 @@ function formatTanggalBerita(dateStr: string) {
     })
 }
 
+interface AgendaBeranda {
+    id: string
+    title: string
+    type: string
+    status: string
+    date: string
+    time: string
+    location: string
+    description: string | null
+}
+
+function parseAgendaDate(dateStr: string) {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) {
+        return { day: '01', month: 'BLN' }
+    }
+    return {
+        day: date.toLocaleDateString('id-ID', { day: '2-digit' }),
+        month: date.toLocaleDateString('id-ID', { month: 'short' }).toUpperCase(),
+    }
+}
+
 export default function Page() {
     const heroRef = useRef<HTMLElement>(null)
     const { scrollYProgress: heroProgress } = useScroll({
@@ -197,6 +219,29 @@ export default function Page() {
         }
 
         fetchLatestNews()
+    }, [supabase])
+
+    const [latestAgendas, setLatestAgendas] = useState<AgendaBeranda[]>([])
+    const [isLoadingAgenda, setIsLoadingAgenda] = useState(true)
+
+    useEffect(() => {
+        const fetchLatestAgendas = async () => {
+            setIsLoadingAgenda(true)
+            const { data, error } = await supabase
+                .from('agenda')
+                .select('id, title, type, status, date, time, location, description')
+                .neq('status', 'Draft')
+                .order('date', { ascending: false })
+                .order('created_at', { ascending: false })
+                .limit(3)
+
+            if (!error && data) {
+                setLatestAgendas(data as AgendaBeranda[])
+            }
+            setIsLoadingAgenda(false)
+        }
+
+        fetchLatestAgendas()
     }, [supabase])
 
     return (
@@ -641,11 +686,11 @@ export default function Page() {
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="h-[1px] w-6 sm:w-12 bg-blue-600/30" />
                                 <span className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase text-blue-600">
-                                    Kalender Kegiatan
-                                </span>
+                        Kalender Kegiatan
+                    </span>
                             </div>
                             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                                Agenda <span className="text-blue-600">Mendatang</span>
+                                Agenda <span className="text-blue-600">Kegiatan</span>
                             </h2>
                             <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-600 font-normal max-w-2xl">
                                 Ikuti beragam kegiatan akademik, workshop teknologi, pengabdian, dan ajang kolaborasi mahasiswa Informatika UM Surabaya.
@@ -661,79 +706,111 @@ export default function Page() {
                         </Link>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-3">
-                        {agenda.slice(0, 3).map((event, index) => {
-                            const dayNumber = event.date.trim().split(' ')[0] || '01'
-
-                            return (
-                                <motion.div
-                                    key={event.title}
-                                    initial={{ opacity: 0, y: 6 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: '-20px' }}
-                                    transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
-                                    className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white/95 p-5 sm:p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/10"
+                    {isLoadingAgenda ? (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {[1, 2, 3].map((n) => (
+                                <div
+                                    key={n}
+                                    className="animate-pulse rounded-2xl border border-slate-200/90 bg-white/95 p-6"
                                 >
-                                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 rounded-t-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                    <div>
-                                        {/* Header Kartu: Date Box & Badges */}
-                                        <div className="flex items-start justify-between gap-3 mb-4">
-                                            <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-center transition-colors group-hover:bg-blue-600 group-hover:border-blue-600">
-                                                <span className="text-xl font-black leading-none text-blue-600 group-hover:text-white transition-colors">
-                                                    {dayNumber}
-                                                </span>
-                                                <span className="mt-1 text-[10px] font-extrabold tracking-wider uppercase text-blue-700 group-hover:text-blue-100 transition-colors">
-                                                    {event.month}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex flex-col items-end gap-1.5">
-                                                <span className="rounded-full bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
-                                                    {event.type || 'Event'}
-                                                </span>
-                                                <span className="text-[10px] font-semibold text-slate-400">
-                                                    {event.status}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Judul & Deskripsi */}
-                                        <div className="space-y-2">
-                                            <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug transition-colors group-hover:text-blue-600 line-clamp-2">
-                                                {event.title}
-                                            </h3>
-                                            <p className="text-xs sm:text-sm leading-relaxed text-slate-600 font-normal line-clamp-2">
-                                                {event.desc}
-                                            </p>
-                                        </div>
-
-                                        {/* Waktu & Lokasi */}
-                                        <div className="mt-4 pt-3.5 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="size-3.5 text-blue-600 shrink-0" />
-                                                <span>{event.time}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="size-3.5 text-blue-600 shrink-0" />
-                                                <span className="truncate">{event.place}</span>
-                                            </div>
-                                        </div>
+                                    <div className="flex justify-between mb-4">
+                                        <div className="size-14 rounded-xl bg-slate-100" />
+                                        <div className="h-5 w-24 rounded-full bg-slate-100" />
                                     </div>
+                                    <div className="h-5 w-full rounded bg-slate-100 mb-2" />
+                                    <div className="h-4 w-4/5 rounded bg-slate-100 mb-4" />
+                                    <div className="h-10 w-full rounded-xl bg-slate-100 mt-6" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : latestAgendas.length > 0 ? (
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {latestAgendas.map((event, index) => {
+                                const { day, month } = parseAgendaDate(event.date)
+                                const isDone = event.status === 'Selesai'
 
-                                    {/* Action Footer */}
-                                    <div className="mt-5 pt-3.5 border-t border-slate-100">
-                                        <Link
-                                            href="/events"
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white active:scale-[0.98]"
-                                        >
-                                            <CalendarDays className="size-3.5" />
-                                            <span>Lihat Jadwal Lengkap</span>
-                                        </Link>
-                                    </div>
-                                </motion.div>
-                            )
-                        })}
-                    </div>
+                                return (
+                                    <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, margin: '-20px' }}
+                                        transition={{ delay: index * 0.04, duration: 0.25, ease: 'easeOut' }}
+                                        className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white/95 p-5 sm:p-6 shadow-sm backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-900/10"
+                                    >
+                                        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 rounded-t-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                        <div>
+                                            {/* Header Kartu: Date Box & Badges */}
+                                            <div className="flex items-start justify-between gap-3 mb-4">
+                                                <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-center transition-colors group-hover:bg-blue-600 group-hover:border-blue-600">
+                                        <span className="text-xl font-black leading-none text-blue-600 group-hover:text-white transition-colors">
+                                            {day}
+                                        </span>
+                                                    <span className="mt-1 text-[10px] font-extrabold tracking-wider uppercase text-blue-700 group-hover:text-blue-100 transition-colors">
+                                            {month}
+                                        </span>
+                                                </div>
+
+                                                <div className="flex flex-col items-end gap-1.5">
+                                        <span className="rounded-full bg-blue-50 border border-blue-200/60 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
+                                            {event.type || 'Program Kerja'}
+                                        </span>
+                                                    <span
+                                                        className={`text-[10px] font-bold ${
+                                                            isDone
+                                                                ? 'text-emerald-600'
+                                                                : event.status === 'Berlangsung'
+                                                                    ? 'text-rose-600'
+                                                                    : 'text-slate-400'
+                                                        }`}
+                                                    >
+                                            {event.status}
+                                        </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Judul & Deskripsi */}
+                                            <div className="space-y-2">
+                                                <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug transition-colors group-hover:text-blue-600 line-clamp-2">
+                                                    {event.title}
+                                                </h3>
+                                                <p className="text-xs sm:text-sm leading-relaxed text-slate-600 font-normal line-clamp-2">
+                                                    {event.description || 'Agenda resmi kegiatan Himpunan Mahasiswa Informatika UM Surabaya.'}
+                                                </p>
+                                            </div>
+
+                                            {/* Waktu & Lokasi */}
+                                            <div className="mt-4 pt-3.5 border-t border-slate-100 space-y-1.5 text-xs text-slate-500">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock className="size-3.5 text-blue-600 shrink-0" />
+                                                    <span>{event.time}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="size-3.5 text-blue-600 shrink-0" />
+                                                    <span className="truncate">{event.location}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Footer */}
+                                        <div className="mt-5 pt-3.5 border-t border-slate-100">
+                                            <Link
+                                                href="/events"
+                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 transition-all duration-200 hover:border-blue-600 hover:bg-blue-600 hover:text-white active:scale-[0.98]"
+                                            >
+                                                <CalendarDays className="size-3.5" />
+                                                <span>Lihat Jadwal Lengkap</span>
+                                            </Link>
+                                        </div>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    ) : (
+                        <div className="rounded-2xl border border-slate-200/90 bg-white/80 p-10 text-center">
+                            <p className="text-sm font-semibold text-slate-600">Belum ada agenda kegiatan yang dipublikasikan.</p>
+                        </div>
+                    )}
 
                     <div className="mt-8 flex justify-center sm:hidden">
                         <Link

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     motion,
     useScroll,
@@ -10,7 +11,6 @@ import {
     type Variants,
     AnimatePresence
 } from 'framer-motion'
-import { eventsData, type EventItem } from '@/app/data'
 import {
     ArrowLeft,
     CalendarDays,
@@ -18,15 +18,25 @@ import {
     Users,
     ArrowRight,
     ArrowUp,
-    Copyright,
     Clock,
     Search,
     X,
     CalendarPlus,
-    CheckCircle2
+    CheckCircle2,
+    Loader2
 } from 'lucide-react'
 
-const categories = ['Semua', 'Akademik', 'Sosial', 'Kreatif', 'Organisasi']
+interface AgendaPublik {
+    id: string
+    title: string
+    type: string
+    status: 'Akan Datang' | 'Berlangsung' | 'Selesai' | 'Draft'
+    date: string
+    time: string
+    location: string
+    division: string
+    description: string | null
+}
 
 const container: Variants = {
     hidden: {},
@@ -40,6 +50,29 @@ const reveal: Variants = {
         y: 0,
         transition: { duration: 0.25, ease: 'easeOut' },
     },
+}
+
+function parseDateParts(dateStr: string) {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) {
+        return { day: '-', month: '-', year: '-' }
+    }
+    return {
+        day: date.toLocaleDateString('id-ID', { day: '2-digit' }),
+        month: date.toLocaleDateString('id-ID', { month: 'short' }).toUpperCase(),
+        year: date.toLocaleDateString('id-ID', { year: 'numeric' }),
+    }
+}
+
+function makeGoogleCalendarUrl(event: AgendaPublik) {
+    const text = encodeURIComponent(event.title)
+    const details = encodeURIComponent(
+        `${event.description || 'Agenda kegiatan HIMATIFA UMSURA'}\n\nPelaksana: ${event.division}\nWaktu: ${event.time}`
+    )
+    const location = encodeURIComponent(event.location)
+    const cleanDate = event.date.replace(/-/g, '')
+    const datesParam = cleanDate.length === 8 ? `&dates=${cleanDate}/${cleanDate}` : ''
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}${datesParam}`
 }
 
 function BackToTop() {
@@ -70,34 +103,84 @@ function BackToTop() {
     )
 }
 
-function makeGoogleCalendarUrl(event: EventItem) {
-    const text = encodeURIComponent(event.title)
-    const details = encodeURIComponent(`${event.desc}\n\nDiselenggarakan oleh: HIMATIFA UMSURA\nWaktu: ${event.time}`)
-    const location = encodeURIComponent(event.location)
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}`
-}
-
 export default function EventsPage() {
+    const [events, setEvents] = useState<AgendaPublik[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('Semua')
-    const [activeModalEvent, setActiveModalEvent] = useState<EventItem | null>(null)
+    const [statusFilter, setStatusFilter] = useState<'semua' | 'aktif' | 'selesai'>('semua')
+    const [activeModalEvent, setActiveModalEvent] = useState<AgendaPublik | null>(null)
     const [registeredSuccess, setRegisteredSuccess] = useState(false)
 
     const { scrollYProgress } = useScroll()
     const progressScale = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 })
 
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
+
+    // Ambil data agenda non-draft dari Supabase
+    useEffect(() => {
+        const fetchEvents = async () => {
+            setIsLoading(true)
+            const { data, error } = await supabase
+                .from('agenda')
+                .select('*')
+                .neq('status', 'Draft')
+                .order('date', { ascending: true })
+
+            if (error) {
+                console.error('Gagal memuat agenda publik:', error.message)
+            } else {
+                const raw = (data as AgendaPublik[]) || []
+                // Urutkan agenda aktif (Akan Datang / Berlangsung) di atas, Selesai di bawah
+                const sorted = [...raw].sort((a, b) => {
+                    const aDone = a.status === 'Selesai' ? 1 : 0
+                    const bDone = b.status === 'Selesai' ? 1 : 0
+                    if (aDone !== bDone) return aDone - bDone
+                    return a.date.localeCompare(b.date)
+                })
+                setEvents(sorted)
+            }
+            setIsLoading(false)
+        }
+
+        fetchEvents()
+    }, [supabase])
+
+    // Kategori dinamis mengikuti data + opsi di form admin
+    const categories = useMemo(() => {
+        const base = ['Program Kerja', 'Seminar / Workshop', 'Lomba / Kompetisi', 'Pengabdian Masyarakat', 'Rapat Internal']
+        const dynamic = events.map((e) => e.type).filter(Boolean)
+        return ['Semua', ...Array.from(new Set([...base, ...dynamic]))]
+    }, [events])
+
     const filteredEvents = useMemo(() => {
-        return eventsData.filter((event) => {
-            const matchesCat = selectedCategory === 'Semua' || event.category === selectedCategory
+        return events.filter((event) => {
+            const matchesCat = selectedCategory === 'Semua' || event.type === selectedCategory
+
+            const isDone = event.status === 'Selesai'
+            const matchesStatus =
+                statusFilter === 'semua' ||
+                (statusFilter === 'aktif' && !isDone) ||
+                (statusFilter === 'selesai' && isDone)
+
             const q = searchQuery.toLowerCase().trim()
             const matchesSearch =
                 !q ||
-                event.title.toLowerCase().includes(q) ||
-                event.desc.toLowerCase().includes(q) ||
-                event.location.toLowerCase().includes(q)
-            return matchesCat && matchesSearch
+                (event.title || '').toLowerCase().includes(q) ||
+                (event.description || '').toLowerCase().includes(q) ||
+                (event.location || '').toLowerCase().includes(q) ||
+                (event.division || '').toLowerCase().includes(q)
+
+            return matchesCat && matchesStatus && matchesSearch
         })
-    }, [searchQuery, selectedCategory])
+    }, [events, searchQuery, selectedCategory, statusFilter])
 
     const handleRegisterSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -117,6 +200,7 @@ export default function EventsPage() {
             />
 
             <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+                {/* Top Navigation */}
                 <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -140,6 +224,7 @@ export default function EventsPage() {
                     </div>
                 </motion.div>
 
+                {/* Hero Header */}
                 <motion.div
                     initial="hidden"
                     animate="show"
@@ -160,6 +245,7 @@ export default function EventsPage() {
 
                 <div className="feed-line-gradient my-6 opacity-70" />
 
+                {/* Filter & Search Bar */}
                 <motion.div
                     initial="hidden"
                     animate="show"
@@ -170,8 +256,8 @@ export default function EventsPage() {
                         {categories.map((category) => {
                             const isSelected = selectedCategory === category
                             const count = category === 'Semua'
-                                ? eventsData.length
-                                : eventsData.filter((e) => e.category === category).length
+                                ? events.length
+                                : events.filter((e) => e.type === category).length
 
                             return (
                                 <button
@@ -217,15 +303,42 @@ export default function EventsPage() {
                     </div>
                 </motion.div>
 
+                {/* List Agenda */}
                 <section className="mt-8">
-                    <div className="mb-4 flex items-center justify-between text-xs font-medium text-slate-500">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs font-medium text-slate-500">
                         <span>
                             Menampilkan <strong className="text-slate-900">{filteredEvents.length}</strong> agenda kegiatan
                             {searchQuery && <span> dengan kata kunci &ldquo;{searchQuery}&rdquo;</span>}
                         </span>
+
+                        {/* Sub-filter Status (Semua / Aktif / Terlaksana) */}
+                        <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
+                            {[
+                                { key: 'semua', label: 'Semua' },
+                                { key: 'aktif', label: 'Akan Datang' },
+                                { key: 'selesai', label: 'Terlaksana' },
+                            ].map((st) => (
+                                <button
+                                    key={st.key}
+                                    onClick={() => setStatusFilter(st.key as 'semua' | 'aktif' | 'selesai')}
+                                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition cursor-pointer ${
+                                        statusFilter === st.key
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-500 hover:text-slate-900'
+                                    }`}
+                                >
+                                    {st.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
-                    {filteredEvents.length > 0 ? (
+                    {isLoading ? (
+                        <div className="my-16 flex flex-col items-center justify-center gap-3 text-slate-500">
+                            <Loader2 className="size-7 animate-spin text-blue-600" />
+                            <p className="text-xs font-semibold">Memuat jadwal agenda HIMATIFA...</p>
+                        </div>
+                    ) : filteredEvents.length > 0 ? (
                         <motion.div
                             initial="hidden"
                             whileInView="show"
@@ -234,59 +347,57 @@ export default function EventsPage() {
                             className="flex flex-col gap-4"
                         >
                             {filteredEvents.map((event) => {
-                                const isRegistrationOpen = event.status === 'Pendaftaran Dibuka'
                                 const isDone = event.status === 'Selesai'
+                                const isOngoing = event.status === 'Berlangsung'
+                                const { day, month, year } = parseDateParts(event.date)
 
                                 return (
                                     <motion.article
                                         key={event.id}
                                         variants={reveal}
                                         className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-5 sm:p-6 shadow-xs transition hover:border-blue-300 hover:shadow-md md:flex-row md:items-center md:gap-6 ${
-                                            isDone ? 'border-slate-200/70 opacity-80' : 'border-slate-200'
+                                            isDone ? 'border-slate-200/70 opacity-75' : 'border-slate-200'
                                         }`}
                                     >
                                         <div className="flex items-start gap-4 flex-1">
                                             <div className="flex flex-col items-center justify-center shrink-0 size-16 sm:size-20 rounded-2xl border border-slate-200 bg-slate-50 text-center transition group-hover:border-blue-200 group-hover:bg-blue-50/60">
                                                 <span className="text-xl sm:text-2xl font-black text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
-                                                    {event.date}
+                                                    {day}
                                                 </span>
                                                 <span className="mt-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-500 group-hover:text-blue-600 transition-colors">
-                                                    {event.month}
+                                                    {month} {year}
                                                 </span>
                                             </div>
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
                                                     <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 border border-blue-100">
-                                                        {event.category}
+                                                        {event.type}
                                                     </span>
 
                                                     <span
-                                                        className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${
-                                                            event.status === 'Pendaftaran Dibuka'
-                                                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                                : event.status === 'Segera Hadir'
-                                                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                                                    : 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold border ${
+                                                            isOngoing
+                                                                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                                                : event.status === 'Akan Datang'
+                                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                                    : 'bg-slate-100 text-slate-500 border-slate-200'
                                                         }`}
                                                     >
+                                                        {isOngoing && <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />}
                                                         {event.status}
                                                     </span>
-
-                                                    {event.capacity && (
-                                                        <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
-                                                            • {event.capacity}
-                                                        </span>
-                                                    )}
                                                 </div>
 
                                                 <h3 className="mt-2 text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
                                                     {event.title}
                                                 </h3>
 
-                                                <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500 max-w-2xl line-clamp-2">
-                                                    {event.desc}
-                                                </p>
+                                                {event.description && (
+                                                    <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500 max-w-2xl line-clamp-2">
+                                                        {event.description}
+                                                    </p>
+                                                )}
 
                                                 <div className="mt-3 flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs font-medium text-slate-500">
                                                     <span className="flex items-center gap-1.5">
@@ -297,10 +408,10 @@ export default function EventsPage() {
                                                         <MapPin className="size-3.5 text-blue-600" />
                                                         <span>{event.location}</span>
                                                     </span>
-                                                    {event.speaker && (
-                                                        <span className="flex items-center gap-1.5 text-slate-400 hidden lg:flex">
+                                                    {event.division && (
+                                                        <span className="flex items-center gap-1.5 text-slate-400">
                                                             <Users className="size-3.5" />
-                                                            <span>{event.speaker}</span>
+                                                            <span>{event.division}</span>
                                                         </span>
                                                     )}
                                                 </div>
@@ -308,30 +419,30 @@ export default function EventsPage() {
                                         </div>
 
                                         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 md:mt-0 md:border-t-0 md:pt-0 md:flex-col md:items-end md:shrink-0">
-                                            {isRegistrationOpen && (
-                                                <button
-                                                    onClick={() => setActiveModalEvent(event)}
-                                                    className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer"
-                                                >
-                                                    <span>Daftar Acara</span>
-                                                    <ArrowRight className="size-3.5" />
-                                                </button>
-                                            )}
-
                                             {!isDone && (
-                                                <a
-                                                    href={makeGoogleCalendarUrl(event)}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 active:scale-[0.98]"
-                                                >
-                                                    <CalendarPlus className="size-3.5" />
-                                                    <span>Simpan Kalender</span>
-                                                </a>
+                                                <>
+                                                    <button
+                                                        onClick={() => setActiveModalEvent(event)}
+                                                        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer"
+                                                    >
+                                                        <span>Daftar Acara</span>
+                                                        <ArrowRight className="size-3.5" />
+                                                    </button>
+
+                                                    <a
+                                                        href={makeGoogleCalendarUrl(event)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-600 active:scale-[0.98]"
+                                                    >
+                                                        <CalendarPlus className="size-3.5" />
+                                                        <span>Simpan Kalender</span>
+                                                    </a>
+                                                </>
                                             )}
 
                                             {isDone && (
-                                                <span className="text-xs font-semibold text-slate-400 py-1">
+                                                <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-500">
                                                     Kegiatan Terlaksana
                                                 </span>
                                             )}
@@ -355,8 +466,9 @@ export default function EventsPage() {
                                 onClick={() => {
                                     setSearchQuery('')
                                     setSelectedCategory('Semua')
+                                    setStatusFilter('semua')
                                 }}
-                                className="mt-4 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition"
+                                className="mt-4 rounded-xl bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
                             >
                                 Reset Filter
                             </button>
@@ -364,6 +476,7 @@ export default function EventsPage() {
                     )}
                 </section>
 
+                {/* CTA Kolaborasi */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -395,6 +508,7 @@ export default function EventsPage() {
                 </motion.div>
             </div>
 
+            {/* Modal Pendaftaran Acara */}
             <AnimatePresence>
                 {activeModalEvent && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -414,7 +528,7 @@ export default function EventsPage() {
                         >
                             <button
                                 onClick={() => setActiveModalEvent(null)}
-                                className="absolute right-4 top-4 grid size-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                                className="absolute right-4 top-4 grid size-8 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
                             >
                                 <X className="size-4" />
                             </button>
@@ -442,7 +556,9 @@ export default function EventsPage() {
                                     <div className="mt-2.5 flex flex-wrap gap-3 text-xs text-slate-500 font-medium border-b border-slate-100 pb-3">
                                         <span className="flex items-center gap-1">
                                             <CalendarDays className="size-3.5 text-blue-600" />
-                                            {activeModalEvent.date} {activeModalEvent.month} {activeModalEvent.year}
+                                            {parseDateParts(activeModalEvent.date).day}{' '}
+                                            {parseDateParts(activeModalEvent.date).month}{' '}
+                                            {parseDateParts(activeModalEvent.date).year}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <Clock className="size-3.5 text-blue-600" />
