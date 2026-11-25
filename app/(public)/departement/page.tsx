@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     motion,
     useScroll,
@@ -24,23 +24,126 @@ import {
     Shield,
     Sparkles,
     GraduationCap,
-    Layers,
+    Loader2,
 } from 'lucide-react'
-import { departments, DepartmentKey } from '@/app/data'
 
-interface DepartmentMember {
+const DEFAULT_AVATAR = '/default.jpeg'
+
+type DepartmentKey = 'PSDM' | 'MEDKOMINFO' | 'EKRAF' | 'KEPSOS' | 'DEPLU'
+
+interface PengurusSupabase {
+    id: string
     name: string
-    role: 'Ketua Departemen' | 'Sekretaris Departemen' | 'Anggota Departemen'
-    cohort: string
-    focus: string
-    image: string
+    nim: string
+    angkatan: string
+    role: string
+    division: string
+    period: string
+    status: string
+    image: string | null
 }
 
-interface DepartmentVisualInfo {
-    image: string
+interface DepartmentInfo {
+    key: DepartmentKey
+    dbDivision: string
+    label: string
     badge: string
     tagline: string
+    desc: string
     divisionFocus: string
+    image: string
+    programs: string[]
+}
+
+const DEPARTMENT_CONFIG: Record<DepartmentKey, DepartmentInfo> = {
+    PSDM: {
+        key: 'PSDM',
+        dbDivision: 'PSDM (Pengembangan Sumber Daya Mahasiswa)',
+        label: 'Pengembangan Sumber Daya Mahasiswa',
+        badge: 'Kaderisasi & Internal',
+        tagline: 'Membangun solidaritas, kepemimpinan, dan karakter unggul mahasiswa Informatika.',
+        desc: 'Departemen PSDM berfokus pada pembinaan internal organisasi, kaderisasi mahasiswa baru, serta penguatan kapasitas soft-skill dan kepemimpinan pengurus maupun anggota HIMATIFA.',
+        divisionFocus: 'Kaderisasi mahasiswa baru, upgrading pengurus, dan pemetaan potensi SDM Informatika.',
+        image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80',
+        programs: ['LKMM Pra-TD & Kaderisasi', 'Upgrading Pengurus', 'Forum Aspirasi Mahasiswa'],
+    },
+    MEDKOMINFO: {
+        key: 'MEDKOMINFO',
+        dbDivision: 'MEDKOMINFO (Media Komunikasi dan Informasi)',
+        label: 'Media Komunikasi dan Informasi',
+        badge: 'Branding & Publikasi',
+        tagline: 'Menjadi wajah digital dan jembatan informasi kreatif HIMATIFA UMSURA.',
+        desc: 'Departemen MEDKOMINFO bertanggung jawab atas pengelolaan identitas visual, publikasi kegiatan, jurnalistik kampus, serta pengembangan media sosial dan portal informasi himpunan.',
+        divisionFocus: 'Desain komunikasi visual, dokumentasi kegiatan, rilis pers, dan manajemen media digital.',
+        image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80',
+        programs: ['Branding & Feed Kreatif', 'Liputan & Rilis Pers', 'Podcast & Konten Edukasi'],
+    },
+    EKRAF: {
+        key: 'EKRAF',
+        dbDivision: 'EKRAF (Ekonomi Kreatif)',
+        label: 'Ekonomi Kreatif',
+        badge: 'Kewirausahaan & Produk',
+        tagline: 'Mendorong kemandirian finansial organisasi melalui inovasi produk dan technopreneurship.',
+        desc: 'Departemen EKRAF mengelola unit usaha himpunan, produksi atribut resmi (PDH & merchandise), serta menumbuhkan jiwa kewirausahaan berbasis teknologi di kalangan mahasiswa.',
+        divisionFocus: 'Pengadaan PDH/atribut, pengelolaan dana usaha kreatif, dan inkubasi technopreneur.',
+        image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80',
+        programs: ['Official Merch & PDH', 'HIMATIFA Store / Danus', 'Workshop Technopreneur'],
+    },
+    KEPSOS: {
+        key: 'KEPSOS',
+        dbDivision: 'KEPSOS (Kepedulian Sosial)',
+        label: 'Kepedulian Sosial',
+        badge: 'Pengabdian & Sosial',
+        tagline: 'Menghadirkan manfaat nyata ilmu Informatika bagi masyarakat dan lingkungan sekitar.',
+        desc: 'Departemen KEPSOS menginisiasi gerakan sosial, tanggap bencana, bakti masyarakat, serta program literasi digital untuk membangun kepekaan sosial mahasiswa.',
+        divisionFocus: 'Bakti sosial masyarakat, aksi tanggap kemanusiaan, dan pengabdian berbasis teknologi.',
+        image: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=80',
+        programs: ['HIMATIFA Berbagi', 'Bakti Sosial & Desa Binaan', 'Aksi Tanggap Bencana'],
+    },
+    DEPLU: {
+        key: 'DEPLU',
+        dbDivision: 'DEPLU (Luar Negeri)',
+        label: 'Hubungan Luar Negeri',
+        badge: 'Relasi & Eksternal',
+        tagline: 'Memperluas jejaring kemitraan strategis antar-institusi, komunitas, dan industri.',
+        desc: 'Departemen DEPLU berperan sebagai representasi eksternal himpunan dalam menjalin studi banding, delegasi forum nasional (Permikomnas), serta kerja sama lintas kampus dan industri.',
+        divisionFocus: 'Studi banding antar-himpunan, delegasi eksternal, dan kemitraan strategis.',
+        image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=1200&q=80',
+        programs: ['Studi Banding Himpunan', 'Delegasi Permikomnas', 'Kunjungan Industri & Mitra'],
+    },
+}
+
+const DEPARTMENT_KEYS: DepartmentKey[] = ['PSDM', 'MEDKOMINFO', 'EKRAF', 'KEPSOS', 'DEPLU']
+
+const departmentIcons: Record<DepartmentKey, React.ElementType> = {
+    PSDM: Users,
+    MEDKOMINFO: Megaphone,
+    EKRAF: Lightbulb,
+    KEPSOS: HeartHandshake,
+    DEPLU: Globe,
+}
+
+const ROLE_ORDER: Record<string, number> = {
+    'Ketua Departement': 1,
+    'Sekretaris Departement': 2,
+    'Anggota Department': 3,
+}
+
+function normalizeImageUrl(url: string | null | undefined): string {
+    if (!url || !url.trim()) return DEFAULT_AVATAR
+    const trimmed = url.trim()
+
+    const fileMatch = trimmed.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
+    if (fileMatch && fileMatch[1]) {
+        return `https://drive.google.com/thumbnail?id=${fileMatch[1]}&sz=w1000`
+    }
+
+    const idMatch = trimmed.match(/drive\.google\.com\/(?:open|uc)\?.*id=([a-zA-Z0-9_-]+)/)
+    if (idMatch && idMatch[1]) {
+        return `https://drive.google.com/thumbnail?id=${idMatch[1]}&sz=w1000`
+    }
+
+    return trimmed
 }
 
 const container: Variants = {
@@ -85,294 +188,92 @@ function BackToTop() {
     )
 }
 
-const departmentIcons: Record<DepartmentKey, React.ElementType> = {
-    PSDM: Users,
-    Deplu: Globe,
-    Kepsos: HeartHandshake,
-    Ekraf: Lightbulb,
-    Medkominfo: Megaphone,
-}
-
-const departmentVisuals: Record<DepartmentKey, DepartmentVisualInfo> = {
-    PSDM: {
-        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop&q=80',
-        badge: 'Kapasitas & Kaderisasi',
-        tagline: 'Mencetak Talenta Digital yang Berdaya Saing & Berkarakter',
-        divisionFocus: 'Fokus pada peningkatan soft-skill, hard-skill, dan iklim mentoring sesama mahasiswa.',
-    },
-    Deplu: {
-        image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&auto=format&fit=crop&q=80',
-        badge: 'Relasi & Kemitraan',
-        tagline: 'Membangun Jejaring Lintas Kampus & Kolaborasi Industri',
-        divisionFocus: 'Menghubungkan civitas HIMATIFA dengan dunia usaha, industri, dan forum himpunan nasional.',
-    },
-    Kepsos: {
-        image: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1200&auto=format&fit=crop&q=80',
-        badge: 'Pengabdian & Kepedulian',
-        tagline: 'Mengabdi dengan Hati, Menghadirkan Dampak Nyata',
-        divisionFocus: 'Implementasi aksi sosial, tanggap kepedulian mahasiswa, dan literasi teknologi ke masyarakat.',
-    },
-    Ekraf: {
-        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1200&auto=format&fit=crop&q=80',
-        badge: 'Kemandirian Finansial',
-        tagline: 'Inkubasi Wirausaha & Produk Kreatif Berkelanjutan',
-        divisionFocus: 'Mengembangkan unit usaha resmi himpunan, official merchandise, dan literasi entrepreneurship.',
-    },
-    Medkominfo: {
-        image: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=1200&auto=format&fit=crop&q=80',
-        badge: 'Media & Syiar Digital',
-        tagline: 'Pusat Publikasi Visual, Informasi & Branding Organisasi',
-        divisionFocus: 'Mengelola kanal komunikasi publik, konten kreatif, video dokumenter, dan platform web himpunan.',
-    },
-}
-
-const departmentMembers: Record<DepartmentKey, DepartmentMember[]> = {
-    PSDM: [
-        {
-            name: 'Fajar Dwi Santoso',
-            role: 'Ketua Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Kepemimpinan & Tata Kelola Kaderisasi',
-            image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Nabila Putri Az-Zahra',
-            role: 'Sekretaris Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Administrasi, Notulensi & Database Anggota',
-            image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Arya Budi Pratama',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Mentoring Mahasiswa & Alur Pengkaderan',
-            image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Dimas Rizky Ramadhan',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Kurikulum Workshop & Bootcamp Pemrograman',
-            image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Cinta Laura Maharani',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Pendampingan & Keakraban Mahasiswa Baru',
-            image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Gilang Fauzan Hakim',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Monitoring & Evaluasi Aktivitas Belajar',
-            image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&auto=format&fit=crop&q=80',
-        },
-    ],
-    Deplu: [
-        {
-            name: 'Rayhan Zaidan Akbar',
-            role: 'Ketua Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Strategi Kemitraan Industri & Eksternal Kampus',
-            image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Alisya Khairunnisa',
-            role: 'Sekretaris Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Korespondensi Eksternal & Hubungan Tamu',
-            image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Farhan Maulana',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Program Company Visit & Kerja Sama Magang',
-            image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Zahra Aulia Rahma',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Jejaring Studi Banding Antar-Himpunan',
-            image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Kevin Ananta Wijaya',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Pendelegasian Kompetisi & Forum Mahasiswa',
-            image: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Tiara Salsabila',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Public Relations & Dokumentasi Hubungan Luar',
-            image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80',
-        },
-    ],
-    Kepsos: [
-        {
-            name: 'Ilham Wahyudi',
-            role: 'Ketua Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Inisiasi Pengabdian & Manajemen Bakti Sosial',
-            image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Safira Annisa',
-            role: 'Sekretaris Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Pencatatan Donasi & Notulensi Kegiatan Sosial',
-            image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Bagas Saputra',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Program Literasi Digital bagi Warga Sekitar',
-            image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Maya Indah Lestari',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Koordinator Posko & Bantuan Kemanusiaan',
-            image: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Rio Fernando',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Logistik Lapangan & Pendataan Relawan',
-            image: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Dewi Anggraini',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Advokasi Sosial & Kesejahteraan Mahasiswa',
-            image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&auto=format&fit=crop&q=80',
-        },
-    ],
-    Ekraf: [
-        {
-            name: 'Danendra Putra',
-            role: 'Ketua Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Strategi Finansial & Inovasi Bisnis Kreatif',
-            image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Hanifah Nurul Izzah',
-            role: 'Sekretaris Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Pembukuan Kas Toko & Rekap Inventaris Produk',
-            image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Rafi Ahmad Syahputra',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Desain Merchandise Resmi & Identitas Apparel',
-            image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Anisa Rahmawati',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Pemasaran Digital & Kampanye Penjualan',
-            image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Aditya Surya Pratama',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Pengelolaan Toko Fisik & Logistik Pengiriman',
-            image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Vina Melinda',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Layanan Pemesanan & Promosi Katalog Kreatif',
-            image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&auto=format&fit=crop&q=80',
-        },
-    ],
-    Medkominfo: [
-        {
-            name: 'Haidar Ali Mukhtar',
-            role: 'Ketua Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Direksi Kreatif & Kebijakan Media Digital',
-            image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Clarissa Aurelia',
-            role: 'Sekretaris Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Jadwal Editorial Publikasi & Arsip Dokumentasi',
-            image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Fachri Alamsyah',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2023',
-            focus: 'Pengembangan & Pemeliharaan Website Himpunan',
-            image: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Salma Nabilla',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Desain Grafis Konten Feed & Ilustrasi Info',
-            image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Iqbal Ramadhan',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2024',
-            focus: 'Videografi, Motion Graphic & Video Aftermovie',
-            image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-            name: 'Rizky Pratama',
-            role: 'Anggota Departemen',
-            cohort: 'Angkatan 2025',
-            focus: 'Copywriting & Interaksi Komunitas Media Sosial',
-            image: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&auto=format&fit=crop&q=80',
-        },
-    ],
-}
-
 export default function DepartmentPage() {
     const { scrollYProgress } = useScroll()
     const progressScale = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 })
-    const [selectedDepartment, setSelectedDepartment] = useState<DepartmentKey>('PSDM')
 
-    const currentDept = departments[selectedDepartment]
-    const currentVisual = departmentVisuals[selectedDepartment]
+    const [selectedDepartment, setSelectedDepartment] = useState<DepartmentKey>('PSDM')
+    const [allMembers, setAllMembers] = useState<PengurusSupabase[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
+
+    useEffect(() => {
+        const fetchMembers = async () => {
+            setIsLoading(true)
+            const { data, error } = await supabase
+                .from('bph_members')
+                .select('*')
+                .neq('status', 'Demisioner')
+                .order('created_at', { ascending: true })
+
+            if (error) {
+                console.error('Gagal memuat anggota departemen:', error.message)
+            } else {
+                setAllMembers((data as PengurusSupabase[]) || [])
+            }
+            setIsLoading(false)
+        }
+
+        fetchMembers()
+    }, [supabase])
+
+    const membersByDept = useMemo(() => {
+        const grouped: Record<DepartmentKey, PengurusSupabase[]> = {
+            PSDM: [],
+            MEDKOMINFO: [],
+            EKRAF: [],
+            KEPSOS: [],
+            DEPLU: [],
+        }
+
+        allMembers.forEach((member) => {
+            const divUpper = (member.division || '').toUpperCase()
+            for (const key of DEPARTMENT_KEYS) {
+                if (divUpper.startsWith(key)) {
+                    grouped[key].push(member)
+                    break
+                }
+            }
+        })
+
+        for (const key of DEPARTMENT_KEYS) {
+            grouped[key].sort((a, b) => {
+                const orderA = ROLE_ORDER[a.role] ?? 99
+                const orderB = ROLE_ORDER[b.role] ?? 99
+                if (orderA !== orderB) return orderA - orderB
+                return a.name.localeCompare(b.name)
+            })
+        }
+
+        return grouped
+    }, [allMembers])
+
+    const currentDept = DEPARTMENT_CONFIG[selectedDepartment]
     const DeptIcon = departmentIcons[selectedDepartment] || Users
-    const departmentKeys = Object.keys(departments) as DepartmentKey[]
-    const currentMembers = departmentMembers[selectedDepartment] || []
-    const activeIndex = departmentKeys.indexOf(selectedDepartment) + 1
+    const currentMembers = membersByDept[selectedDepartment] || []
+    const activeIndex = DEPARTMENT_KEYS.indexOf(selectedDepartment) + 1
+
+    const ketuaCount = currentMembers.filter((m) => m.role === 'Ketua Departement').length
+    const sekreCount = currentMembers.filter((m) => m.role === 'Sekretaris Departement').length
+    const anggotaCount = currentMembers.filter((m) => m.role === 'Anggota Department').length
 
     return (
         <main className="relative min-h-screen bg-transparent text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900">
-            {/* Scroll Progress Bar */}
             <motion.div
                 style={{ scaleX: progressScale }}
                 className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600"
                 aria-hidden
             />
 
-            {/* Container Max Width 6xl */}
             <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-                {/* 1. Top Navigation & Breadcrumbs */}
                 <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -396,7 +297,6 @@ export default function DepartmentPage() {
                     </div>
                 </motion.div>
 
-                {/* 2. Hero Header Section */}
                 <motion.div
                     initial="hidden"
                     animate="show"
@@ -417,13 +317,12 @@ export default function DepartmentPage() {
                         variants={reveal}
                         className="mt-3.5 text-sm sm:text-base leading-relaxed text-slate-600 font-normal"
                     >
-                        Jelajahi profil visual departemen beserta susunan fungsionaris aktif yang terdiri dari Ketua Departemen, Sekretaris Departemen, dan Anggota Departemen periode 2026/2027.
+                        Jelajahi profil departemen beserta susunan fungsionaris aktif yang terdiri dari Ketua Departemen, Sekretaris Departemen, dan Anggota Departemen periode 2026/2027.
                     </motion.p>
                 </motion.div>
 
                 <div className="feed-line-gradient my-6 opacity-70" />
 
-                {/* 3. Filter Tab Menu (Pilihan Departemen) */}
                 <motion.div
                     initial="hidden"
                     animate="show"
@@ -431,9 +330,10 @@ export default function DepartmentPage() {
                     className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-4"
                 >
                     <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                        {departmentKeys.map((dept) => {
+                        {DEPARTMENT_KEYS.map((dept) => {
                             const isSelected = selectedDepartment === dept
                             const Icon = departmentIcons[dept]
+                            const count = membersByDept[dept]?.length || 0
 
                             return (
                                 <button
@@ -452,7 +352,7 @@ export default function DepartmentPage() {
                                             isSelected ? 'bg-white/20 text-white' : 'bg-slate-200/70 text-slate-500'
                                         }`}
                                     >
-                                        6 Anggota
+                                        {isLoading ? '...' : `${count} Anggota`}
                                     </span>
                                 </button>
                             )
@@ -460,11 +360,10 @@ export default function DepartmentPage() {
                     </div>
 
                     <div className="text-xs font-semibold text-slate-500 hidden sm:block">
-                        Fokus: <span className="text-blue-600 font-bold">{currentVisual.badge}</span>
+                        Fokus: <span className="text-blue-600 font-bold">{currentDept.badge}</span>
                     </div>
                 </motion.div>
 
-                {/* 4. Departemen Showcase & Foto Departemen Banner */}
                 <motion.div
                     key={`showcase-${selectedDepartment}`}
                     initial={{ opacity: 0, y: 16 }}
@@ -473,22 +372,17 @@ export default function DepartmentPage() {
                     className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
                 >
                     <div className="grid lg:grid-cols-12 gap-0">
-                        {/* Foto Visual Departemen (Representatif) */}
                         <div className="relative min-h-[260px] sm:min-h-[320px] lg:col-span-5 overflow-hidden bg-slate-900">
-                            <Image
-                                src={currentVisual.image}
-                                alt={`Dokumentasi dan Aktivitas Departemen ${selectedDepartment}`}
-                                fill
-                                sizes="(max-width: 1024px) 100vw, 42vw"
-                                className="object-cover object-center transition-transform duration-700 hover:scale-105"
-                                priority
+                            <img
+                                src={currentDept.image}
+                                alt={`Dokumentasi Departemen ${selectedDepartment}`}
+                                className="size-full object-cover object-center transition-transform duration-700 hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/20 lg:bg-gradient-to-r lg:from-transparent lg:to-slate-950/30" />
 
-                            {/* Badge Foto Departemen */}
                             <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-xl bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md border border-white/20">
                                 <DeptIcon className="size-4 text-blue-400" />
-                                <span>Foto Kegiatan {selectedDepartment}</span>
+                                <span>Departemen {selectedDepartment}</span>
                             </div>
 
                             <div className="absolute bottom-4 left-4 right-4 z-10 text-white">
@@ -496,12 +390,11 @@ export default function DepartmentPage() {
                                     Visi Gerak Departemen
                                 </span>
                                 <p className="text-xs sm:text-sm font-medium text-slate-100 line-clamp-2 mt-0.5">
-                                    {currentVisual.tagline}
+                                    {currentDept.tagline}
                                 </p>
                             </div>
                         </div>
 
-                        {/* Deskripsi & Program Kerja Departemen */}
                         <div className="p-6 sm:p-8 lg:col-span-7 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-100">
@@ -529,11 +422,10 @@ export default function DepartmentPage() {
 
                                 <div className="mt-3 rounded-xl bg-slate-50 border border-slate-100 p-3 text-xs text-slate-600">
                                     <span className="font-bold text-slate-800">Cakupan Peran: </span>
-                                    {currentVisual.divisionFocus}
+                                    {currentDept.divisionFocus}
                                 </div>
                             </div>
 
-                            {/* Program Kerja Unggulan */}
                             <div className="mt-6 pt-4 border-t border-slate-100">
                                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-3">
                                     <Calendar className="size-3.5 text-blue-600" />
@@ -555,7 +447,6 @@ export default function DepartmentPage() {
                     </div>
                 </motion.div>
 
-                {/* 5. ANGGOTA DEPARTEMEN SECTION (Foto & Struktur: Ketua, Sekretaris, Anggota) */}
                 <div className="mt-12 sm:mt-16">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
                         <div>
@@ -564,104 +455,115 @@ export default function DepartmentPage() {
                                 <span>Susunan Pengurus Departemen</span>
                             </div>
                             <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
-                                6 Anggota Fungsionaris Departemen {selectedDepartment}
+                                {currentMembers.length} Anggota Fungsionaris Departemen {selectedDepartment}
                             </h3>
                             <p className="mt-1 text-xs sm:text-sm text-slate-500">
-                                Terdiri dari 1 Ketua Departemen, 1 Sekretaris Departemen, dan 4 Anggota Departemen.
+                                Terdiri dari {ketuaCount} Ketua Departemen, {sekreCount} Sekretaris Departemen, dan {anggotaCount} Anggota Departemen.
                             </p>
                         </div>
 
                         <span className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-blue-50 border border-blue-200/60 px-3.5 py-1.5 text-xs font-bold text-blue-700">
                             <CheckCircle2 className="size-3.5 text-blue-600" />
-                            <span>1 Ketua • 1 Sekretaris • 4 Anggota</span>
+                            <span>
+                                {ketuaCount} Ketua • {sekreCount} Sekretaris • {anggotaCount} Anggota
+                            </span>
                         </span>
                     </div>
 
-                    {/* Grid 6 Anggota dengan Foto Potret (Responsive 1 col mobile, 2 col tablet, 3 col desktop) */}
-                    <motion.div
-                        key={`members-grid-${selectedDepartment}`}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-                    >
-                        {currentMembers.map((member) => {
-                            const isHead = member.role === 'Ketua Departemen'
-                            const isSecretary = member.role === 'Sekretaris Departemen'
+                    {isLoading ? (
+                        <div className="my-12 flex flex-col items-center justify-center gap-3 text-slate-500">
+                            <Loader2 className="size-7 animate-spin text-blue-600" />
+                            <p className="text-xs font-semibold">Memuat struktur fungsionaris dari database...</p>
+                        </div>
+                    ) : currentMembers.length > 0 ? (
+                        <motion.div
+                            key={`members-grid-${selectedDepartment}`}
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+                        >
+                            {currentMembers.map((member) => {
+                                const isHead = member.role === 'Ketua Departement'
+                                const isSecretary = member.role === 'Sekretaris Departement'
+                                const displayRole = member.role.replace('Departement', 'Departemen')
+                                const avatarSrc = normalizeImageUrl(member.image)
 
-                            return (
-                                <div
-                                    key={member.name}
-                                    className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-white p-4 transition-all duration-300 hover:-translate-y-1 ${
-                                        isHead
-                                            ? 'border-blue-300 shadow-sm ring-1 ring-blue-500/20 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-600/10'
-                                            : isSecretary
-                                            ? 'border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-md'
-                                            : 'border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md'
-                                    }`}
-                                >
-                                    <div>
-                                        {/* Foto Potret Anggota */}
-                                        <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-slate-100 mb-4">
-                                            <Image
-                                                src={member.image}
-                                                alt={`Foto ${member.name} - ${member.role}`}
-                                                fill
-                                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                                                className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
+                                return (
+                                    <div
+                                        key={member.id}
+                                        className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-white p-4 transition-all duration-300 hover:-translate-y-1 ${
+                                            isHead
+                                                ? 'border-blue-300 shadow-sm ring-1 ring-blue-500/20 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-600/10'
+                                                : isSecretary
+                                                    ? 'border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-md'
+                                                    : 'border-slate-200/80 shadow-xs hover:border-slate-300 hover:shadow-md'
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-slate-100 mb-4">
+                                                <img
+                                                    src={avatarSrc}
+                                                    alt={`Foto ${member.name} - ${displayRole}`}
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = DEFAULT_AVATAR
+                                                    }}
+                                                    className="size-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
 
-                                            {/* Badge Angkatan (Top Right) */}
-                                            <div className="absolute top-3 right-3 rounded-lg bg-slate-900/75 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md border border-white/20">
-                                                {member.cohort}
+                                                <div className="absolute top-3 right-3 rounded-lg bg-slate-900/75 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md border border-white/20">
+                                                    Angkatan {member.angkatan}
+                                                </div>
+
+                                                <div className="absolute bottom-3 left-3">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase shadow-sm ${
+                                                            isHead
+                                                                ? 'bg-blue-600 text-white'
+                                                                : isSecretary
+                                                                    ? 'bg-white text-blue-700 border border-blue-200'
+                                                                    : 'bg-white text-slate-700 border border-slate-200'
+                                                        }`}
+                                                    >
+                                                        <Shield className="size-3" />
+                                                        {displayRole}
+                                                    </span>
+                                                </div>
                                             </div>
 
-                                            {/* Badge Peran (Bottom Left) */}
-                                            <div className="absolute bottom-3 left-3">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase shadow-sm ${
-                                                        isHead
-                                                            ? 'bg-blue-600 text-white'
-                                                            : isSecretary
-                                                            ? 'bg-white text-blue-700 border border-blue-200'
-                                                            : 'bg-white text-slate-700 border border-slate-200'
-                                                    }`}
-                                                >
-                                                    <Shield className="size-3" />
-                                                    {member.role}
-                                                </span>
+                                            <div className="px-1">
+                                                <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
+                                                    {member.name}
+                                                </h4>
+                                                <p className="mt-1 text-xs text-slate-500 font-medium">
+                                                    Periode Kepengurusan {member.period}
+                                                </p>
                                             </div>
                                         </div>
 
-                                        {/* Info Nama & Fokus */}
-                                        <div className="px-1">
-                                            <h4 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
-                                                {member.name}
-                                            </h4>
-                                            <p className="mt-1.5 text-xs text-slate-500 font-normal leading-relaxed line-clamp-2">
-                                                {member.focus}
-                                            </p>
+                                        <div className="mt-4 pt-3 border-t border-slate-100 px-1 flex items-center justify-between text-[11px] text-slate-400">
+                                            <span className="flex items-center gap-1.5 font-medium text-slate-500">
+                                                <GraduationCap className="size-3.5 text-blue-600" />
+                                                <span>S1 Informatika</span>
+                                            </span>
+                                            <span className="font-mono text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
+                                                {selectedDepartment}
+                                            </span>
                                         </div>
                                     </div>
-
-                                    {/* Footer Info Anggota */}
-                                    <div className="mt-4 pt-3 border-t border-slate-100 px-1 flex items-center justify-between text-[11px] text-slate-400">
-                                        <span className="flex items-center gap-1.5 font-medium text-slate-500">
-                                            <GraduationCap className="size-3.5 text-blue-600" />
-                                            <span>S1 Informatika</span>
-                                        </span>
-                                        <span className="font-mono text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
-                                            {selectedDepartment}
-                                        </span>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </motion.div>
+                                )
+                            })}
+                        </motion.div>
+                    ) : (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+                            <p className="text-sm font-bold text-slate-700">
+                                Belum ada data anggota aktif untuk departemen {selectedDepartment}.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
-                {/* 6. Bottom Banner Kolaborasi */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
