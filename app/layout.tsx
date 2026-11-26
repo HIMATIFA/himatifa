@@ -15,9 +15,12 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-    title: 'HIMATIFA UMSURA — Website Resmi Himpunan Mahasiswa Informatika',
+    metadataBase: new URL('https://himatifa.or.id'),
+    title: {
+        default: 'HIMATIFA UMSURA — Website Resmi Himpunan Mahasiswa Informatika',
+        template: '%s | HIMATIFA UMSURA',
+    },
     description: 'Selamat Datang Di Website Resmi Himpunan Mahasiswa Informatika (HIMATIFA) Universitas Muhammadiyah Surabaya',
-    generator: 'v0.app',
     icons: {
         icon: [
             {
@@ -38,12 +41,12 @@ export const metadata: Metadata = {
 
     openGraph: {
         title: 'HIMATIFA UMSURA — Inovasi Tanpa Batas',
-        description: 'Himpunan Mahasiswa Informatika UMSURA.',
-        url: 'https://himatifa.vercel.app',
+        description: 'Himpunan Mahasiswa Informatika Universitas Muhammadiyah Surabaya.',
+        url: 'https://himatifa.or.id',
         siteName: 'HIMATIFA UMSURA',
         images: [
             {
-                url: 'https://himatifa.vercel.app/himatifabg.png',
+                url: '/himatifabg.png',
                 width: 1200,
                 height: 630,
                 alt: 'Logo HIMATIFA UMSURA',
@@ -55,8 +58,8 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'HIMATIFA UMSURA — Inovasi Tanpa Batas',
-        description: 'Himpunan Mahasiswa Informatika UMSURA.',
-        images: ['https://himatifa.vercel.app/himatifabg.png'],
+        description: 'Himpunan Mahasiswa Informatika Universitas Muhammadiyah Surabaya.',
+        images: ['/himatifabg.png'],
     },
 }
 

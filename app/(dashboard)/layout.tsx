@@ -1,7 +1,19 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '../utils/supabase/server'
 import DashboardShell from './DashboardShell'
 import { type UserRole } from '@/components/layout/Sidebar'
+
+export const metadata: Metadata = {
+    title: {
+        default: 'Dashboard SIM HIMATIFA',
+        template: '%s | SIM HIMATIFA',
+    },
+    robots: {
+        index: false,
+        follow: false,
+    },
+}
 
 export default async function DashboardLayout({
                                                   children,
