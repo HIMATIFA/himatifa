@@ -3,10 +3,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     ArrowLeft,
     ArrowRight,
-    CheckCircle2,
     Cpu,
     MessageCircle,
     MonitorSmartphone,
@@ -34,7 +34,8 @@ import {
     Zap,
     ExternalLink,
     HelpCircle,
-    Minus
+    Minus,
+    Loader2
 } from 'lucide-react'
 import {
     digitalProducts,
@@ -44,27 +45,45 @@ import {
     ProductVariant
 } from './data'
 
+interface DbEkrafProduct {
+    id: string
+    sku: string
+    name: string
+    category: 'AI & Produktivitas' | 'Streaming & Hiburan' | 'Desain & Editing' | 'Merchandise'
+    variant_info: string | null
+    stock: number
+    price: number
+    sales_count: number
+}
+
+interface GroupedProductCard {
+    groupKey: string
+    title: string
+    tag: string
+    iconName: string
+    variants: Array<ProductVariant & { dbProductId?: string; stock: number }>
+}
+
 const productIconMap: Record<string, React.ElementType> = {
-    Bot: Bot,
-    Sparkles: Sparkles,
-    Film: Film,
-    Tv: Tv,
-    Palette: Palette,
-    Scissors: Scissors,
-    ImageIcon: ImageIcon,
-    BookOpen: BookOpen,
-    ShoppingBag: ShoppingBag,
-    Shirt: Shirt
+    Bot,
+    Sparkles,
+    Film,
+    Tv,
+    Palette,
+    Scissors,
+    ImageIcon,
+    BookOpen,
+    ShoppingBag,
+    Shirt
 }
 
 const techIconMap: Record<string, React.ElementType> = {
-    MonitorSmartphone: MonitorSmartphone,
-    Cpu: Cpu,
-    Server: Server,
-    Wrench: Wrench,
+    MonitorSmartphone,
+    Cpu,
+    Server,
+    Wrench
 }
 
-// Quick FAQ presets untuk Customer Service Chat
 const csFaqPresets = [
     {
         q: 'Berapa lama aktivasi akun premium?',
@@ -75,34 +94,59 @@ const csFaqPresets = [
         a: 'Semua produk bergaransi penuh 100%! Jika terjadi kendala login sebelum masa aktif berakhir, kami siap bantu reset atau ganti akun baru secara gratis.'
     },
     {
-        q: 'Kapan PDH & Lanyard siap diambil?',
-        a: 'Untuk Pre-Order PDH estimasi produksi 2-3 minggu. Untuk Lanyard ready stock bisa langsung diambil di Sekretariat HIMATIFA Gedung G Lt. 3.'
+        q: 'Metode pembayaran apa saja yang didukung?',
+        a: 'Mendukung SeaBank (087762728979), DANA (087762728979), QRIS instan, serta Transfer Bank dengan batas bayar 24 jam.'
     },
     {
-        q: 'Metode pembayaran apa saja yang didukung?',
-        a: 'Mendukung QRIS instan (GoPay, OVO, Dana, BCA, dll) serta Transfer Bank BSI, Mandiri, BCA, BRI, dan SeaBank dengan batas bayar 24 jam.'
+        q: 'Kapan PDH & Lanyard siap diambil?',
+        a: 'Untuk Pre-Order PDH estimasi produksi 2-3 minggu. Untuk Lanyard ready stock bisa langsung diambil di Sekretariat HIMATIFA Gedung G Lt. 3.'
     }
 ]
 
+const resolveBrandAndIcon = (name: string, category: string): { brandTitle: string; iconName: string } => {
+    const lower = name.toLowerCase()
+    if (lower.includes('chatgpt')) return { brandTitle: 'ChatGPT Plus / Go', iconName: 'Bot' }
+    if (lower.includes('gemini')) return { brandTitle: 'Google Gemini Plus', iconName: 'Sparkles' }
+    if (lower.includes('netflix')) return { brandTitle: 'Netflix Premium', iconName: 'Film' }
+    if (lower.includes('vidio')) return { brandTitle: 'Vidio Platinum', iconName: 'Tv' }
+    if (lower.includes('canva')) return { brandTitle: 'Canva Pro', iconName: 'Palette' }
+    if (lower.includes('capcut')) return { brandTitle: 'CapCut Pro', iconName: 'Scissors' }
+    if (lower.includes('lightroom')) return { brandTitle: 'Adobe Lightroom', iconName: 'ImageIcon' }
+    if (lower.includes('wattpad')) return { brandTitle: 'Wattpad Premium+', iconName: 'BookOpen' }
+    if (category === 'Merchandise') return { brandTitle: 'Merchandise HIMATIFA', iconName: 'Shirt' }
+    return { brandTitle: name.split('-')[0].trim(), iconName: 'ShoppingBag' }
+}
+
 export default function EkrafStorePage() {
     const [isScrolled, setIsScrolled] = useState(false)
-    const [selectedItem, setSelectedItem] = useState<{ category: string; variant: ProductVariant } | null>(null)
+    const [selectedItem, setSelectedItem] = useState<{ category: string; variantName: string } | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedTag, setSelectedTag] = useState<string>('Semua')
     const [cartCount, setCartCount] = useState(0)
 
-    // Customer Service Chat Widget States (Docked on Right Screen)
+    const [dbProducts, setDbProducts] = useState<DbEkrafProduct[]>([])
+    const [isLoadingCatalog, setIsLoadingCatalog] = useState(true)
+
     const [isCsOpen, setIsCsOpen] = useState(false)
     const [chatMessages, setChatMessages] = useState<Array<{ sender: 'cs' | 'user'; text: string; time: string }>>([
         {
             sender: 'cs',
-            text: 'Halo Mahasiswa Umsurabaya! 👋 Ada yang bisa kami bantu seputar lisensi software, merchandise PDH, pesanan aktif, atau konfirmasi pembayaran?',
+            text: 'Halo Mahasiswa Umsurabaya! 👋 Ada yang bisa kami bantu seputar aplikasi premium (ChatGPT, Gemini, Netflix, Canva), merchandise PDH, atau konfirmasi pembayaran?',
             time: 'Online'
         }
     ])
     const [inputMessage, setInputMessage] = useState('')
     const [isCsTyping, setIsCsTyping] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
 
     const updateCartCount = () => {
         const savedCart = localStorage.getItem('himatifa_cart')
@@ -119,12 +163,46 @@ export default function EkrafStorePage() {
         }
     }
 
+    const fetchCatalog = async () => {
+        const { data, error } = await supabase
+            .from('ekraf_products')
+            .select('id, sku, name, category, variant_info, stock, price, sales_count')
+            .order('sku', { ascending: true })
+
+        if (!error && data) {
+            setDbProducts(
+                data.map((row) => ({
+                    ...row,
+                    stock: Number(row.stock),
+                    price: Number(row.price),
+                    sales_count: Number(row.sales_count || 0)
+                })) as DbEkrafProduct[]
+            )
+        }
+        setIsLoadingCatalog(false)
+    }
+
     useEffect(() => {
         updateCartCount()
+        fetchCatalog()
+
+        const channel = supabase
+            .channel('public-ekraf-catalog')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'ekraf_products' },
+                () => fetchCatalog()
+            )
+            .subscribe()
+
         const handleScroll = () => setIsScrolled(window.scrollY > 20)
         window.addEventListener('scroll', handleScroll, { passive: true })
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+
+        return () => {
+            supabase.removeChannel(channel)
+            window.removeEventListener('scroll', handleScroll)
+        }
+    }, [supabase])
 
     useEffect(() => {
         if (isCsOpen) {
@@ -132,42 +210,96 @@ export default function EkrafStorePage() {
         }
     }, [chatMessages, isCsOpen, isCsTyping])
 
+    const catalogGroups: GroupedProductCard[] = useMemo(() => {
+        if (dbProducts.length > 0) {
+            const grouped = new Map<string, GroupedProductCard>()
+
+            dbProducts.forEach((item) => {
+                const { brandTitle, iconName } = resolveBrandAndIcon(item.name, item.category)
+                const cleanVariantName = item.name.includes('-')
+                    ? item.name.split('-').slice(1).join('-').trim()
+                    : item.variant_info || item.name
+
+                const variantEntry = {
+                    dbProductId: item.id,
+                    name: cleanVariantName,
+                    price: item.price,
+                    priceLabel: `Rp ${item.price.toLocaleString('id-ID')}`,
+                    isPopular: item.sales_count >= 5 || item.name.toLowerCase().includes('1 bulan'),
+                    stock: item.stock
+                }
+
+                const existing = grouped.get(brandTitle)
+                if (existing) {
+                    existing.variants.push(variantEntry)
+                } else {
+                    grouped.set(brandTitle, {
+                        groupKey: brandTitle,
+                        title: brandTitle,
+                        tag: item.category,
+                        iconName,
+                        variants: [variantEntry]
+                    })
+                }
+            })
+
+            return Array.from(grouped.values())
+        }
+
+        return digitalProducts.map((p) => ({
+            groupKey: p.category,
+            title: p.category,
+            tag: p.tag,
+            iconName: p.iconName,
+            variants: p.variants.map((v) => ({ ...v, stock: 50 }))
+        }))
+    }, [dbProducts])
+
     const filteredProducts = useMemo(() => {
         const query = searchQuery.trim().toLowerCase()
-        return digitalProducts.filter((product) => {
+        return catalogGroups.filter((product) => {
             const matchesSearch =
                 query === '' ||
-                product.category.toLowerCase().includes(query) ||
+                product.title.toLowerCase().includes(query) ||
+                product.tag.toLowerCase().includes(query) ||
                 product.variants.some((v) => v.name.toLowerCase().includes(query))
             const matchesTag = selectedTag === 'Semua' || product.tag === selectedTag
             return matchesSearch && matchesTag
         })
-    }, [searchQuery, selectedTag])
+    }, [catalogGroups, searchQuery, selectedTag])
 
-    const handleAddToCart = (category: string, variant: ProductVariant) => {
+    const handleAddToCart = (
+        brandTitle: string,
+        variant: ProductVariant & { dbProductId?: string; stock: number }
+    ) => {
+        if (variant.stock <= 0) return
+
         const savedCart = localStorage.getItem('himatifa_cart')
         const currentCart = savedCart ? JSON.parse(savedCart) : []
 
-        const itemId = `${category}-${variant.name}`
+        const itemId = variant.dbProductId || `${brandTitle}-${variant.name}`
+        const fullDisplayName = `${brandTitle} - ${variant.name}`
         const existingIndex = currentCart.findIndex((item: { id: string }) => item.id === itemId)
 
         if (existingIndex > -1) {
-            currentCart[existingIndex].qty += 1
+            currentCart[existingIndex].qty = Math.min(variant.stock, currentCart[existingIndex].qty + 1)
         } else {
             currentCart.push({
                 id: itemId,
-                category,
-                name: variant.name,
+                productId: variant.dbProductId || null,
+                category: brandTitle,
+                name: fullDisplayName,
                 price: variant.price,
                 priceLabel: variant.priceLabel,
                 qty: 1,
+                maxStock: variant.stock,
                 selected: true
             })
         }
 
         localStorage.setItem('himatifa_cart', JSON.stringify(currentCart))
         updateCartCount()
-        setSelectedItem({ category, variant })
+        setSelectedItem({ category: brandTitle, variantName: variant.name })
         setTimeout(() => setSelectedItem(null), 2500)
     }
 
@@ -179,41 +311,42 @@ export default function EkrafStorePage() {
         setInputMessage('')
         setIsCsTyping(true)
 
-        const matchedFaq = csFaqPresets.find((f) =>
-            userText.toLowerCase().includes(f.q.toLowerCase().split(' ')[0]) ||
-            f.q.toLowerCase().includes(userText.toLowerCase())
+        const matchedFaq = csFaqPresets.find(
+            (f) =>
+                userText.toLowerCase().includes(f.q.toLowerCase().split(' ')[0]) ||
+                f.q.toLowerCase().includes(userText.toLowerCase())
         )
 
         setTimeout(() => {
             setIsCsTyping(false)
             const replyText = matchedFaq
                 ? matchedFaq.a
-                : `Terima kasih pertanyaannya kak! Pesan ini telah diteruskan ke Admin Penjualan Ekraf HIMATIFA. Anda juga bisa langsung chat kami di WhatsApp untuk respons lebih cepat.`
+                : 'Terima kasih pertanyaannya kak! Pesan ini telah diteruskan ke Admin Penjualan Ekraf HIMATIFA. Anda juga bisa langsung chat kami di WhatsApp (0877-6272-8979) untuk respons lebih cepat.'
 
             setChatMessages((prev) => [
                 ...prev,
-                { sender: 'cs', text: replyText, time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }
+                {
+                    sender: 'cs',
+                    text: replyText,
+                    time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                }
             ])
-        }, 700)
+        }, 650)
     }
 
-    const categories = ['Semua', 'AI Tools', 'Streaming', 'Creative', 'Merchandise']
+    const categories = ['Semua', 'AI & Produktivitas', 'Streaming & Hiburan', 'Desain & Editing', 'Merchandise']
 
     return (
         <main className="relative min-h-screen bg-slate-50 text-slate-800 selection:bg-blue-100 overflow-x-hidden">
-            {/* Background subtle grid pattern */}
             <div className="absolute inset-0 -z-10 feed-grid-squares opacity-35 pointer-events-none" />
-
-            {/* Ambient subtle glow orbs */}
             <div className="absolute top-20 left-1/4 -z-10 size-[320px] sm:size-[420px] rounded-full bg-blue-400/10 blur-[130px] pointer-events-none" />
             <div className="absolute top-96 right-10 -z-10 size-[280px] sm:size-[380px] rounded-full bg-indigo-400/10 blur-[140px] pointer-events-none" />
 
-            {/* Header Navigation */}
             <header className="fixed inset-x-0 top-0 z-40 flex justify-center px-3 pt-3 sm:px-6 lg:px-8 pointer-events-none">
                 <motion.nav
                     animate={{
                         maxWidth: isScrolled ? '768px' : '1280px',
-                        backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.96)' : 'rgba(255, 255, 255, 0.90)',
+                        backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.96)' : 'rgba(255, 255, 255, 0.90)'
                     }}
                     transition={{ duration: 0.25, ease: 'easeInOut' }}
                     className={`pointer-events-auto flex w-full items-center justify-between rounded-2xl border border-slate-200/90 px-3 py-2 sm:px-4 sm:py-2.5 shadow-xs backdrop-blur-md transition-shadow ${
@@ -225,10 +358,9 @@ export default function EkrafStorePage() {
                         className="group flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-blue-600"
                     >
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-                        <span className="hidden xs:inline sm:inline">Beranda</span>
+                        <span>Beranda</span>
                     </Link>
 
-                    {/* Quick Search on Scrolled Desktop */}
                     <AnimatePresence>
                         {isScrolled && (
                             <motion.div
@@ -241,7 +373,7 @@ export default function EkrafStorePage() {
                                     <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="text"
-                                        placeholder="Cari lisensi atau merchandise..."
+                                        placeholder="Cari ChatGPT, Netflix, Canva..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-4 text-xs font-medium outline-none transition focus:border-blue-600 focus:bg-white"
@@ -252,7 +384,6 @@ export default function EkrafStorePage() {
                     </AnimatePresence>
 
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                        {/* CS Toggle Button in Header */}
                         <button
                             onClick={() => setIsCsOpen(true)}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-blue-300 hover:text-blue-600 active:scale-95 cursor-pointer"
@@ -262,7 +393,6 @@ export default function EkrafStorePage() {
                             <Headphones className="size-3.5 sm:hidden" />
                         </button>
 
-                        {/* Cart Button */}
                         <Link
                             href="/ekrafstore/cart"
                             className="group flex items-center gap-1.5 sm:gap-2 rounded-xl bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-white shadow-xs transition-all hover:bg-blue-500 active:scale-[0.98]"
@@ -277,7 +407,6 @@ export default function EkrafStorePage() {
                 </motion.nav>
             </header>
 
-            {/* Added to Cart Feedback Toast */}
             <AnimatePresence>
                 {selectedItem && (
                     <motion.div
@@ -292,7 +421,7 @@ export default function EkrafStorePage() {
                         <div className="overflow-hidden">
                             <p className="text-xs font-bold text-slate-900">Ditambahkan ke Keranjang!</p>
                             <p className="text-[11px] text-slate-500 truncate">
-                                {selectedItem.category} &bull; {selectedItem.variant.name}
+                                {selectedItem.category} &bull; {selectedItem.variantName}
                             </p>
                         </div>
                         <Link
@@ -306,7 +435,6 @@ export default function EkrafStorePage() {
             </AnimatePresence>
 
             <div className="relative z-10 mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 lg:px-8 sm:pt-24">
-                {/* Hero Banner */}
                 <motion.div
                     initial="hidden"
                     animate="show"
@@ -318,7 +446,7 @@ export default function EkrafStorePage() {
                             <motion.div variants={storeItemVariant} className="flex items-center gap-2 sm:gap-3 mb-2.5">
                                 <div className="h-[1px] w-6 sm:w-10 bg-blue-600/40" />
                                 <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase text-blue-600">
-                                    EKRAF STORE OFFICIAL &bull; HIMATIFA UMSURA
+                                    HIMATIFA PREMIUM SERVICES &bull; EKRAF STORE
                                 </span>
                             </motion.div>
 
@@ -326,14 +454,14 @@ export default function EkrafStorePage() {
                                 variants={storeItemVariant}
                                 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight"
                             >
-                                Lisensi Digital & <span className="text-blue-600">Merchandise Resmi</span>
+                                Aplikasi Premium & <span className="text-blue-600">Merchandise Resmi</span>
                             </motion.h1>
 
                             <motion.p
                                 variants={storeItemVariant}
                                 className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-600 font-normal"
                             >
-                                Akses akun premium AI (ChatGPT, Gemini), streaming hiburan, software kreatif, hingga atribut resmi PDH dan Lanyard dengan harga mahasiswa dan <strong>100% bergaransi</strong>.
+                                Akses akun premium AI (ChatGPT, Gemini Plus), streaming hiburan (Netflix, Vidio, Wattpad), software kreatif (Canva Pro, Lightroom, CapCut Pro), hingga atribut resmi dengan harga mahasiswa dan <strong>100% bergaransi</strong>.
                             </motion.p>
 
                             <motion.div variants={storeItemVariant} className="mt-5 flex flex-wrap items-center gap-2.5 sm:gap-3">
@@ -354,7 +482,6 @@ export default function EkrafStorePage() {
                             </motion.div>
                         </div>
 
-                        {/* Benefit Highlights */}
                         <motion.div
                             variants={storeItemVariant}
                             className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:flex lg:flex-col shrink-0"
@@ -382,13 +509,12 @@ export default function EkrafStorePage() {
                     </div>
                 </motion.div>
 
-                {/* Filter & Search Bar */}
                 <div className="mb-6 flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="relative w-full sm:max-w-xs">
                         <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Cari lisensi atau atribut..."
+                            placeholder="Cari ChatGPT, Netflix, Canva..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-8 text-xs sm:text-sm font-medium outline-none transition focus:border-blue-600 focus:ring-1 focus:ring-blue-600 shadow-2xs"
@@ -403,7 +529,6 @@ export default function EkrafStorePage() {
                         )}
                     </div>
 
-                    {/* Category Filter Pills (Scrollable smoothly on mobile) */}
                     <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                         {categories.map((cat) => (
                             <button
@@ -421,8 +546,12 @@ export default function EkrafStorePage() {
                     </div>
                 </div>
 
-                {/* Products Grid */}
-                {filteredProducts.length === 0 ? (
+                {isLoadingCatalog ? (
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white py-16 text-slate-500">
+                        <Loader2 className="size-7 animate-spin text-blue-600 mb-2" />
+                        <p className="text-xs font-semibold">Memuat katalog HIMATIFA Premium Services...</p>
+                    </div>
+                ) : filteredProducts.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-10 text-center">
                         <ShoppingBag className="size-10 text-slate-300 mx-auto mb-3" />
                         <h3 className="text-sm font-bold text-slate-800">Produk Tidak Ditemukan</h3>
@@ -451,7 +580,7 @@ export default function EkrafStorePage() {
 
                             return (
                                 <motion.div
-                                    key={product.category}
+                                    key={product.groupKey}
                                     variants={storeItemVariant}
                                     className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs transition-all duration-200 hover:border-blue-300 hover:shadow-md"
                                 >
@@ -466,44 +595,56 @@ export default function EkrafStorePage() {
                                         </div>
 
                                         <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                                            {product.category}
+                                            {product.title}
                                         </h3>
                                         <p className="text-[11px] text-slate-400 font-medium mt-0.5">
                                             Tersedia {product.variants.length} opsi paket
                                         </p>
 
-                                        {/* Variants List */}
                                         <div className="mt-3.5 space-y-2">
-                                            {product.variants.map((v) => (
-                                                <div
-                                                    key={v.name}
-                                                    className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 p-2 sm:p-2.5 transition hover:border-blue-200 hover:bg-blue-50/30"
-                                                >
-                                                    <div className="overflow-hidden pr-2">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <p className="text-xs font-semibold text-slate-800 truncate">
-                                                                {v.name}
-                                                            </p>
-                                                            {v.isPopular && (
-                                                                <span className="shrink-0 rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.2 text-[9px] font-extrabold text-amber-700">
-                                                                    Favorit
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs font-bold text-blue-600 mt-0.5 font-mono">
-                                                            {v.priceLabel}
-                                                        </p>
-                                                    </div>
-
-                                                    <button
-                                                        onClick={() => handleAddToCart(product.category, v)}
-                                                        title="Tambahkan ke Keranjang"
-                                                        className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-600 text-white shadow-2xs transition hover:bg-blue-500 active:scale-95 cursor-pointer"
+                                            {product.variants.map((v) => {
+                                                const isOutOfStock = v.stock <= 0
+                                                return (
+                                                    <div
+                                                        key={v.dbProductId || v.name}
+                                                        className={`flex items-center justify-between rounded-xl border p-2 sm:p-2.5 transition ${
+                                                            isOutOfStock
+                                                                ? 'border-slate-100 bg-slate-100/60 opacity-60'
+                                                                : 'border-slate-100 bg-slate-50/60 hover:border-blue-200 hover:bg-blue-50/30'
+                                                        }`}
                                                     >
-                                                        <ShoppingCart className="size-3.5" />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                                        <div className="overflow-hidden pr-2">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <p className="text-xs font-semibold text-slate-800 truncate">
+                                                                    {v.name}
+                                                                </p>
+                                                                {v.isPopular && !isOutOfStock && (
+                                                                    <span className="shrink-0 rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.2 text-[9px] font-extrabold text-amber-700">
+                                                                        Favorit
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <p className="text-xs font-bold text-blue-600 font-mono">
+                                                                    {v.priceLabel}
+                                                                </p>
+                                                                <span className="text-[10px] text-slate-400">
+                                                                    {isOutOfStock ? '• Habis' : `• Sisa ${v.stock}`}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <button
+                                                            onClick={() => handleAddToCart(product.title, v)}
+                                                            disabled={isOutOfStock}
+                                                            title={isOutOfStock ? 'Slot Habis' : 'Tambahkan ke Keranjang'}
+                                                            className="grid size-8 shrink-0 place-items-center rounded-lg bg-blue-600 text-white shadow-2xs transition hover:bg-blue-500 active:scale-95 disabled:bg-slate-300 cursor-pointer disabled:cursor-not-allowed"
+                                                        >
+                                                            <ShoppingCart className="size-3.5" />
+                                                        </button>
+                                                    </div>
+                                                )
+                                            })}
                                         </div>
                                     </div>
 
@@ -511,7 +652,7 @@ export default function EkrafStorePage() {
                                         <span className="flex items-center gap-1 text-emerald-600 font-semibold">
                                             <Check className="size-3" /> Bergaransi
                                         </span>
-                                        <span>Proses Otomatis</span>
+                                        <span>SeaBank & DANA Ready</span>
                                     </div>
                                 </motion.div>
                             )
@@ -519,7 +660,6 @@ export default function EkrafStorePage() {
                     </motion.div>
                 )}
 
-                {/* Section Tech & Hardware Services */}
                 <motion.section
                     id="layanan-jasa"
                     initial={{ opacity: 0, y: 16 }}
@@ -585,7 +725,6 @@ export default function EkrafStorePage() {
                     </div>
                 </motion.section>
 
-                {/* Footer */}
                 <footer className="mt-14 sm:mt-16 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-6 sm:flex-row text-xs text-slate-400 font-medium">
                     <p className="flex items-center gap-1.5">
                         <Copyright className="size-3.5" /> 2026 EKRAF STORE &bull; HIMATIFA UMSURA
@@ -594,7 +733,6 @@ export default function EkrafStorePage() {
                 </footer>
             </div>
 
-            {/* Floating CS Chat Launcher Button (Docked Bottom Right) */}
             <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
                 <button
                     onClick={() => setIsCsOpen(!isCsOpen)}
@@ -609,7 +747,6 @@ export default function EkrafStorePage() {
                 </button>
             </div>
 
-            {/* Customer Services Chat Box — DOCKED ON RIGHT SCREEN (Bukan Full Layar) */}
             <AnimatePresence>
                 {isCsOpen && (
                     <motion.div
@@ -619,7 +756,6 @@ export default function EkrafStorePage() {
                         transition={{ duration: 0.22, ease: 'easeOut' }}
                         className="fixed bottom-16 right-4 sm:bottom-20 sm:right-6 z-50 flex w-[calc(100vw-32px)] sm:w-[380px] md:w-[400px] h-[520px] max-h-[78vh] flex-col rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/25 overflow-hidden"
                     >
-                        {/* Chat Header */}
                         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-white">
                             <div className="flex items-center gap-2.5">
                                 <div className="relative">
@@ -629,12 +765,8 @@ export default function EkrafStorePage() {
                                     <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-emerald-400 ring-2 ring-blue-600" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-white leading-tight">
-                                        CS Ekraf HIMATIFA
-                                    </h3>
-                                    <p className="text-[10px] text-blue-100 font-medium">
-                                        Online &bull; Respon &lt; 5 Menit
-                                    </p>
+                                    <h3 className="text-xs font-bold text-white leading-tight">CS Ekraf HIMATIFA</h3>
+                                    <p className="text-[10px] text-blue-100 font-medium">Online &bull; WA: 0877-6272-8979</p>
                                 </div>
                             </div>
 
@@ -656,7 +788,6 @@ export default function EkrafStorePage() {
                             </div>
                         </div>
 
-                        {/* Chat Messages Body */}
                         <div className="flex-1 overflow-y-auto p-3.5 space-y-3 bg-slate-50/70 text-xs scrollbar-thin">
                             {chatMessages.map((msg, idx) => (
                                 <div
@@ -672,9 +803,7 @@ export default function EkrafStorePage() {
                                     >
                                         <p className="text-xs font-medium">{msg.text}</p>
                                     </div>
-                                    <span className="mt-0.5 text-[9px] text-slate-400 px-1 font-mono">
-                                        {msg.time}
-                                    </span>
+                                    <span className="mt-0.5 text-[9px] text-slate-400 px-1 font-mono">{msg.time}</span>
                                 </div>
                             ))}
 
@@ -688,7 +817,6 @@ export default function EkrafStorePage() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Quick FAQ Pills */}
                         <div className="border-t border-slate-100 bg-white p-2.5">
                             <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                                 <HelpCircle className="size-3 text-blue-600" /> Pertanyaan Cepat:
@@ -706,7 +834,6 @@ export default function EkrafStorePage() {
                             </div>
                         </div>
 
-                        {/* Chat Input & Direct WhatsApp Redirection */}
                         <div className="border-t border-slate-100 bg-white p-3">
                             <form
                                 onSubmit={(e) => {
@@ -734,8 +861,9 @@ export default function EkrafStorePage() {
                             <div className="mt-2 flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-100">
                                 <span className="text-slate-400">Butuh respon kilat?</span>
                                 <a
-                                    href={`https://wa.me/6281234567890?text=${encodeURIComponent(
-                                        inputMessage || 'Halo Admin CS Ekraf HIMATIFA, saya ingin bertanya seputar pemesanan di Ekraf Store.'
+                                    href={`https://wa.me/6287762728979?text=${encodeURIComponent(
+                                        inputMessage ||
+                                        'Halo Admin CS Ekraf HIMATIFA, saya ingin bertanya seputar pemesanan di Ekraf Store.'
                                     )}`}
                                     target="_blank"
                                     rel="noreferrer"

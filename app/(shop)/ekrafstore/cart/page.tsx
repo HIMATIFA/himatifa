@@ -17,11 +17,13 @@ import {
 
 export interface CartItem {
     id: string
+    productId?: string | null
     category: string
     name: string
     price: number
     priceLabel: string
     qty: number
+    maxStock?: number
     selected: boolean
 }
 
@@ -74,7 +76,8 @@ export default function CartPage() {
     const updateQty = (id: string, delta: number) => {
         const updated = items.map((item) => {
             if (item.id === id) {
-                const newQty = item.qty + delta
+                const maxAllowed = item.maxStock ?? 99
+                const newQty = Math.min(maxAllowed, item.qty + delta)
                 if (newQty >= 1) {
                     return { ...item, qty: newQty }
                 }
@@ -85,9 +88,7 @@ export default function CartPage() {
     }
 
     const toggleSelect = (id: string) => {
-        const updated = items.map((item) =>
-            item.id === id ? { ...item, selected: !item.selected } : item
-        )
+        const updated = items.map((item) => (item.id === id ? { ...item, selected: !item.selected } : item))
         updateCart(updated)
     }
 
@@ -130,9 +131,7 @@ export default function CartPage() {
                             <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
                                 Keranjang Belanja
                             </h1>
-                            <p className="text-xs text-slate-500 font-normal">
-                                {items.length} Barang Tersimpan
-                            </p>
+                            <p className="text-xs text-slate-500 font-normal">{items.length} Barang Tersimpan</p>
                         </div>
                     </div>
 
@@ -153,11 +152,9 @@ export default function CartPage() {
                         <div className="mb-4 grid size-16 place-items-center rounded-xl bg-blue-50 text-blue-600">
                             <ShoppingBag className="size-8" />
                         </div>
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                            Keranjangmu Masih Kosong
-                        </h2>
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900">Keranjangmu Masih Kosong</h2>
                         <p className="mt-1.5 text-xs sm:text-sm text-slate-500 max-w-sm font-normal">
-                            Temukan lisensi aplikasi digital, kebutuhan akademik, dan merchandise resmi HIMATIFA UMSURA.
+                            Temukan lisensi aplikasi premium, kebutuhan akademik, dan merchandise resmi HIMATIFA UMSURA.
                         </p>
                         <Link
                             href="/ekrafstore"
@@ -172,7 +169,7 @@ export default function CartPage() {
                             <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                                 <button
                                     onClick={toggleSelectAll}
-                                    className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
+                                    className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors cursor-pointer"
                                 >
                                     {isAllSelected ? (
                                         <CheckSquare2 className="size-5 text-blue-600" />
@@ -185,7 +182,7 @@ export default function CartPage() {
                                 {selectedCount > 0 && (
                                     <button
                                         onClick={removeSelected}
-                                        className="text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 transition-colors"
+                                        className="text-xs sm:text-sm font-semibold text-red-600 hover:text-red-700 transition-colors cursor-pointer"
                                     >
                                         Hapus Terpilih
                                     </button>
@@ -206,7 +203,7 @@ export default function CartPage() {
                                         >
                                             <button
                                                 onClick={() => toggleSelect(item.id)}
-                                                className="mt-1 shrink-0 text-slate-400 hover:text-blue-600 transition-colors"
+                                                className="mt-1 shrink-0 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
                                             >
                                                 {item.selected ? (
                                                     <CheckSquare2 className="size-5 text-blue-600" />
@@ -235,7 +232,7 @@ export default function CartPage() {
                                                     <span className="mt-1 inline-block rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-blue-600">
                                                         {item.category}
                                                     </span>
-                                                    <p className="mt-2 text-xs sm:text-sm font-extrabold text-blue-600">
+                                                    <p className="mt-2 text-xs sm:text-sm font-extrabold text-blue-600 font-mono">
                                                         {item.priceLabel || `Rp ${item.price.toLocaleString('id-ID')}`}
                                                     </p>
                                                 </div>
@@ -243,7 +240,7 @@ export default function CartPage() {
                                                 <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100">
                                                     <button
                                                         onClick={() => removeItem(item.id)}
-                                                        className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600 transition-colors"
+                                                        className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                                                     >
                                                         <Trash2 className="size-3.5" />
                                                         <span>Hapus</span>
@@ -253,7 +250,7 @@ export default function CartPage() {
                                                         <button
                                                             onClick={() => updateQty(item.id, -1)}
                                                             disabled={item.qty <= 1}
-                                                            className="grid size-6 place-items-center rounded-lg bg-white border border-slate-200 text-slate-700 shadow-xs disabled:opacity-40"
+                                                            className="grid size-6 place-items-center rounded-lg bg-white border border-slate-200 text-slate-700 shadow-xs disabled:opacity-40 cursor-pointer"
                                                         >
                                                             <Minus className="size-3" />
                                                         </button>
@@ -262,7 +259,8 @@ export default function CartPage() {
                                                         </span>
                                                         <button
                                                             onClick={() => updateQty(item.id, 1)}
-                                                            className="grid size-6 place-items-center rounded-lg bg-white border border-slate-200 text-slate-700 shadow-xs disabled:opacity-40"
+                                                            disabled={item.maxStock !== undefined && item.qty >= item.maxStock}
+                                                            className="grid size-6 place-items-center rounded-lg bg-white border border-slate-200 text-slate-700 shadow-xs disabled:opacity-40 cursor-pointer"
                                                         >
                                                             <Plus className="size-3" />
                                                         </button>
@@ -277,26 +275,24 @@ export default function CartPage() {
 
                         <div className="lg:sticky lg:top-24 lg:col-span-4">
                             <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-                                <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">
-                                    Ringkasan Belanja
-                                </h3>
+                                <h3 className="mb-4 text-sm sm:text-base font-bold text-slate-900">Ringkasan Belanja</h3>
 
                                 <div className="flex flex-col gap-3 text-xs sm:text-sm border-b border-slate-100 pb-4">
                                     <div className="flex justify-between text-slate-600">
                                         <span>Total Harga ({selectedCount} Barang)</span>
-                                        <span className="font-semibold text-slate-900">
+                                        <span className="font-semibold text-slate-900 font-mono">
                                             Rp {total.toLocaleString('id-ID')}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-slate-600">
                                         <span>Diskon Produk</span>
-                                        <span className="font-semibold text-emerald-600">Rp 0</span>
+                                        <span className="font-semibold text-emerald-600 font-mono">Rp 0</span>
                                     </div>
                                 </div>
 
                                 <div className="mt-4 flex items-center justify-between">
                                     <span className="text-xs sm:text-sm font-bold text-slate-900">Total Tagihan</span>
-                                    <span className="text-base sm:text-lg font-extrabold text-blue-600">
+                                    <span className="text-base sm:text-lg font-extrabold text-blue-600 font-mono">
                                         Rp {total.toLocaleString('id-ID')}
                                     </span>
                                 </div>
@@ -324,16 +320,14 @@ export default function CartPage() {
                         <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
                             Total Tagihan
                         </span>
-                        <span className="text-base font-extrabold text-blue-600">
+                        <span className="text-base font-extrabold text-blue-600 font-mono">
                             Rp {total.toLocaleString('id-ID')}
                         </span>
                     </div>
                     <Link
                         href={selectedCount > 0 ? '/ekrafstore/checkout' : '#'}
                         className={`inline-flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-semibold text-white transition-all ${
-                            selectedCount > 0
-                                ? 'bg-blue-600 active:scale-[0.98]'
-                                : 'bg-slate-300 cursor-not-allowed'
+                            selectedCount > 0 ? 'bg-blue-600 active:scale-[0.98]' : 'bg-slate-300 cursor-not-allowed'
                         }`}
                     >
                         <span>Checkout ({selectedCount})</span>
