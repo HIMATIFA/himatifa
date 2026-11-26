@@ -1,15 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-    initialLpjData,
-    type LpjItem,
-    type LpjStatus
-} from '../../../data'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     Receipt,
-    ShieldCheck,
     Plus,
     Search,
     FileText,
@@ -24,8 +20,25 @@ import {
     Check,
     RotateCcw,
     ChevronRight,
-    FileCheck2
+    Loader2,
+    ShieldAlert,
+    Trash2
 } from 'lucide-react'
+
+export type LpjStatus = 'Menunggu Verifikasi' | 'Disetujui' | 'Revisi' | 'Ditolak'
+
+export interface LpjItem {
+    id: string
+    lpj_code: string
+    title: string
+    division: string
+    submitted_date: string
+    budget_planned: number
+    budget_used: number
+    status: LpjStatus
+    notes: string | null
+    created_at: string
+}
 
 const formatRupiah = (val: number): string => {
     return new Intl.NumberFormat('id-ID', {
@@ -35,24 +48,128 @@ const formatRupiah = (val: number): string => {
     }).format(val)
 }
 
+const formatTanggalID = (isoDate: string): string => {
+    if (!isoDate) return '-'
+    const d = new Date(`${isoDate}T00:00:00`)
+    if (isNaN(d.getTime())) return isoDate
+    return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    })
+}
+
 export default function SekumLpjPage() {
-    const [lpjList, setLpjList] = useState<LpjItem[]>(initialLpjData)
+    const router = useRouter()
+
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+    const [isAuthorized, setIsAuthorized] = useState(false)
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+    const [lpjList, setLpjList] = useState<LpjItem[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState<'Semua' | LpjStatus>('Semua')
 
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null)
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false)
     const [selectedLpj, setSelectedLpj] = useState<LpjItem | null>(null)
+    const [detailNotes, setDetailNotes] = useState('')
 
     const [formTitle, setFormTitle] = useState('')
     const [formDivision, setFormDivision] = useState('Departemen PSDM')
     const [formBudgetPlanned, setFormBudgetPlanned] = useState('')
     const [formBudgetUsed, setFormBudgetUsed] = useState('')
+    const [formNotes, setFormNotes] = useState('')
+
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
 
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
         setToast({ message, type })
         setTimeout(() => setToast(null), 3500)
     }
+
+    useEffect(() => {
+        const checkAccess = async () => {
+            setIsCheckingAuth(true)
+            const {
+                data: { user }
+            } = await supabase.auth.getUser()
+
+            if (!user) {
+                router.replace('/login')
+                return
+            }
+
+            setCurrentUserId(user.id)
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single()
+
+            const role = profile?.role || user.user_metadata?.role
+
+            if (role !== 'sekum' && role !== 'admin') {
+                setIsAuthorized(false)
+                setIsCheckingAuth(false)
+                return
+            }
+
+            setIsAuthorized(true)
+            setIsCheckingAuth(false)
+        }
+
+        checkAccess()
+    }, [supabase, router])
+
+    const fetchLpjList = async () => {
+        setIsLoading(true)
+        const { data, error } = await supabase
+            .from('lpj_submissions')
+            .select('*')
+            .order('created_at', { ascending: false })
+
+        if (!error && data) {
+            setLpjList(
+                data.map((row) => ({
+                    ...row,
+                    budget_planned: Number(row.budget_planned) || 0,
+                    budget_used: Number(row.budget_used) || 0
+                })) as LpjItem[]
+            )
+        }
+        setIsLoading(false)
+    }
+
+    useEffect(() => {
+        if (!isAuthorized) return
+
+        fetchLpjList()
+
+        const channel = supabase
+            .channel('lpj-submissions-realtime')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'lpj_submissions' },
+                () => fetchLpjList()
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [isAuthorized, supabase])
 
     const { totalPlanned, totalUsed, pendingCount, approvedCount } = useMemo(() => {
         let planned = 0
@@ -61,8 +178,8 @@ export default function SekumLpjPage() {
         let approved = 0
 
         lpjList.forEach((item) => {
-            planned += item.budgetPlanned
-            used += item.budgetUsed
+            planned += item.budget_planned
+            used += item.budget_used
             if (item.status === 'Menunggu Verifikasi') pending++
             if (item.status === 'Disetujui') approved++
         })
@@ -75,42 +192,92 @@ export default function SekumLpjPage() {
         }
     }, [lpjList])
 
-    const handleUpdateStatus = (id: string, newStatus: LpjStatus) => {
-        setLpjList((prev) =>
-            prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
-        )
-        if (selectedLpj && selectedLpj.id === id) {
-            setSelectedLpj({ ...selectedLpj, status: newStatus })
-        }
-        showToast(`Status LPJ ${id} diperbarui menjadi "${newStatus}".`)
+    const openDetailModal = (item: LpjItem) => {
+        setSelectedLpj(item)
+        setDetailNotes(item.notes || '')
     }
 
-    const handleAddLpj = () => {
-        const plannedNum = parseFloat(formBudgetPlanned)
-        const usedNum = parseFloat(formBudgetUsed) || 0
+    const handleUpdateStatus = async (item: LpjItem, newStatus: LpjStatus, customNotes?: string) => {
+        setIsSaving(true)
+        const updatedNotes = customNotes !== undefined ? customNotes : item.notes
+
+        const { error } = await supabase
+            .from('lpj_submissions')
+            .update({
+                status: newStatus,
+                notes: updatedNotes
+            })
+            .eq('id', item.id)
+
+        if (error) {
+            showToast(`Gagal memperbarui status: ${error.message}`, 'error')
+            setIsSaving(false)
+            return
+        }
+
+        if (selectedLpj && selectedLpj.id === item.id) {
+            setSelectedLpj({ ...selectedLpj, status: newStatus, notes: updatedNotes })
+        }
+
+        setIsSaving(false)
+        showToast(`Status ${item.lpj_code} diperbarui menjadi "${newStatus}".`)
+        await fetchLpjList()
+    }
+
+    const handleAddLpj = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        const plannedNum = Math.round(parseFloat(formBudgetPlanned))
+        const usedNum = Math.round(parseFloat(formBudgetUsed)) || 0
 
         if (!formTitle.trim() || isNaN(plannedNum) || plannedNum <= 0) {
             showToast('Mohon isi judul dan estimasi anggaran dengan benar!', 'error')
             return
         }
 
-        const newLpj: LpjItem = {
-            id: `LPJ-2026-00${lpjList.length + 1}`,
-            title: formTitle,
+        setIsSaving(true)
+        const randomNum = Math.floor(100 + Math.random() * 900)
+        const generatedCode = `LPJ-2026-${randomNum}`
+
+        const { error } = await supabase.from('lpj_submissions').insert({
+            lpj_code: generatedCode,
+            title: formTitle.trim(),
             division: formDivision,
-            submittedDate: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            budgetPlanned: plannedNum,
-            budgetUsed: usedNum,
+            submitted_date: new Date().toISOString().split('T')[0],
+            budget_planned: plannedNum,
+            budget_used: usedNum,
             status: 'Menunggu Verifikasi',
-            notes: 'Berkas baru diunggah dan siap diverifikasi oleh Sekretariat / BPH.'
+            notes: formNotes.trim() || 'Berkas baru diunggah dan siap diverifikasi oleh Sekretariat / BPH.',
+            created_by: currentUserId
+        })
+
+        if (error) {
+            showToast(`Gagal mendaftarkan LPJ: ${error.message}`, 'error')
+            setIsSaving(false)
+            return
         }
 
-        setLpjList([newLpj, ...lpjList])
+        setIsSaving(false)
         setFormTitle('')
         setFormBudgetPlanned('')
         setFormBudgetUsed('')
+        setFormNotes('')
         setIsSubmitModalOpen(false)
-        showToast(`LPJ "${newLpj.title}" berhasil didaftarkan ke sistem.`)
+        showToast(`LPJ "${formTitle.trim()}" berhasil didaftarkan ke sistem.`)
+        await fetchLpjList()
+    }
+
+    const handleDeleteLpj = async (item: LpjItem) => {
+        if (!confirm(`Hapus arsip LPJ "${item.title}" (${item.lpj_code})?`)) return
+
+        const { error } = await supabase.from('lpj_submissions').delete().eq('id', item.id)
+        if (error) {
+            showToast(`Gagal menghapus LPJ: ${error.message}`, 'error')
+        } else {
+            if (selectedLpj?.id === item.id) setSelectedLpj(null)
+            showToast(`Berkas ${item.lpj_code} berhasil dihapus.`, 'info')
+            await fetchLpjList()
+        }
     }
 
     const filteredLpj = useMemo(() => {
@@ -118,15 +285,43 @@ export default function SekumLpjPage() {
             const matchesSearch =
                 item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.division.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.id.toLowerCase().includes(searchQuery.toLowerCase())
+                item.lpj_code.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesStatus = statusFilter === 'Semua' ? true : item.status === statusFilter
             return matchesSearch && matchesStatus
         })
     }, [lpjList, searchQuery, statusFilter])
 
+    if (isCheckingAuth) {
+        return (
+            <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-slate-500">
+                <Loader2 className="size-7 animate-spin text-blue-600" />
+                <p className="text-xs font-semibold">Memverifikasi hak akses Sekretaris Umum...</p>
+            </div>
+        )
+    }
+
+    if (!isAuthorized) {
+        return (
+            <div className="mx-auto my-12 max-w-md rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-xs">
+                <div className="mx-auto mb-4 grid size-14 place-items-center rounded-2xl bg-rose-50 text-rose-600 border border-rose-100">
+                    <ShieldAlert className="size-7" />
+                </div>
+                <h2 className="text-lg font-extrabold text-slate-900">Akses Terbatas</h2>
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                    Modul <strong>Manajemen LPJ</strong> hanya dapat dikelola oleh <strong>Sekretaris Umum (Sekum)</strong> dan <strong>Administrator</strong>.
+                </p>
+                <button
+                    onClick={() => router.back()}
+                    className="mt-6 inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer"
+                >
+                    Kembali
+                </button>
+            </div>
+        )
+    }
+
     return (
         <div className="space-y-6 font-sans">
-            {/* Toast Notification */}
             <AnimatePresence>
                 {toast && (
                     <motion.div
@@ -143,7 +338,6 @@ export default function SekumLpjPage() {
                 )}
             </AnimatePresence>
 
-            {/* Header Section */}
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-slate-200 pb-5">
                 <div>
                     <div className="flex items-center gap-2 text-xs font-semibold text-blue-600 mb-1">
@@ -160,6 +354,7 @@ export default function SekumLpjPage() {
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setIsSubmitModalOpen(true)}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer shrink-0"
                 >
@@ -168,7 +363,6 @@ export default function SekumLpjPage() {
                 </button>
             </div>
 
-            {/* Metric Stats Cards */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                     <div className="flex items-center justify-between mb-2">
@@ -215,10 +409,9 @@ export default function SekumLpjPage() {
                 </div>
             </div>
 
-            {/* Main Table Card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-bold text-slate-700">Filter Status:</span>
                         <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1 text-xs font-semibold">
                             {(['Semua', 'Menunggu Verifikasi', 'Disetujui', 'Revisi', 'Ditolak'] as const).map((st) => (
@@ -239,7 +432,7 @@ export default function SekumLpjPage() {
                         <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Cari proker atau divisi..."
+                            placeholder="Cari proker, kode, atau divisi..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-1.5 pl-8 pr-3 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
@@ -250,62 +443,77 @@ export default function SekumLpjPage() {
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs text-slate-600">
                         <thead className="border-b border-slate-200 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/50">
-                            <tr>
-                                <th className="py-3 px-3">ID & Judul LPJ</th>
-                                <th className="py-3 px-3">Pelaksana / Divisi</th>
-                                <th className="py-3 px-3">Anggaran (RAB vs Real)</th>
-                                <th className="py-3 px-3">Status Verifikasi</th>
-                                <th className="py-3 px-3 text-right">Aksi & Keputusan</th>
-                            </tr>
+                        <tr>
+                            <th className="py-3 px-3">ID & Judul LPJ</th>
+                            <th className="py-3 px-3">Pelaksana / Divisi</th>
+                            <th className="py-3 px-3">Anggaran (RAB vs Real)</th>
+                            <th className="py-3 px-3">Status Verifikasi</th>
+                            <th className="py-3 px-3 text-right">Aksi & Keputusan</th>
+                        </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredLpj.map((item) => (
+                        {isLoading ? (
+                            <tr>
+                                <td colSpan={5} className="py-12 text-center">
+                                    <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-500">
+                                        <Loader2 className="size-4 animate-spin text-blue-600" />
+                                        <span>Memuat arsip LPJ dari Supabase...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : (
+                            filteredLpj.map((item) => (
                                 <tr key={item.id} className="group transition hover:bg-slate-50/80">
                                     <td className="py-3.5 px-3">
-                                        <p className="font-mono text-[10px] font-bold text-blue-600">{item.id}</p>
+                                        <p className="font-mono text-[10px] font-bold text-blue-600">{item.lpj_code}</p>
                                         <p className="font-bold text-slate-900 group-hover:text-blue-600 transition">{item.title}</p>
-                                        <span className="text-[10px] text-slate-400 font-medium">Diajukan: {item.submittedDate}</span>
+                                        <span className="text-[10px] text-slate-400 font-medium">
+                                                Diajukan: {formatTanggalID(item.submitted_date)}
+                                            </span>
                                     </td>
                                     <td className="py-3.5 px-3">
-                                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 border border-slate-200">
-                                            <Building className="size-3 text-blue-600" />
-                                            {item.division}
-                                        </span>
+                                            <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 border border-slate-200">
+                                                <Building className="size-3 text-blue-600" />
+                                                {item.division}
+                                            </span>
                                     </td>
                                     <td className="py-3.5 px-3 font-mono">
-                                        <p className="font-bold text-slate-900">{formatRupiah(item.budgetPlanned)}</p>
-                                        <p className="text-[10px] text-emerald-600 font-semibold">Real: {formatRupiah(item.budgetUsed)}</p>
+                                        <p className="font-bold text-slate-900">{formatRupiah(item.budget_planned)}</p>
+                                        <p className="text-[10px] text-emerald-600 font-semibold">
+                                            Real: {formatRupiah(item.budget_used)}
+                                        </p>
                                     </td>
                                     <td className="py-3.5 px-3 whitespace-nowrap">
                                         {item.status === 'Disetujui' && (
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                                                <CheckCircle2 className="size-3" />
-                                                <span>Disetujui</span>
-                                            </span>
+                                                    <CheckCircle2 className="size-3" />
+                                                    <span>Disetujui</span>
+                                                </span>
                                         )}
                                         {item.status === 'Menunggu Verifikasi' && (
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
-                                                <Clock className="size-3" />
-                                                <span>Menunggu Verifikasi</span>
-                                            </span>
+                                                    <Clock className="size-3" />
+                                                    <span>Menunggu Verifikasi</span>
+                                                </span>
                                         )}
                                         {item.status === 'Revisi' && (
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
-                                                <AlertCircle className="size-3" />
-                                                <span>Perlu Revisi</span>
-                                            </span>
+                                                    <AlertCircle className="size-3" />
+                                                    <span>Perlu Revisi</span>
+                                                </span>
                                         )}
                                         {item.status === 'Ditolak' && (
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
-                                                <XCircle className="size-3" />
-                                                <span>Ditolak</span>
-                                            </span>
+                                                    <XCircle className="size-3" />
+                                                    <span>Ditolak</span>
+                                                </span>
                                         )}
                                     </td>
                                     <td className="py-3.5 px-3 text-right whitespace-nowrap">
                                         <div className="flex items-center justify-end gap-1.5">
                                             <button
-                                                onClick={() => setSelectedLpj(item)}
+                                                type="button"
+                                                onClick={() => openDetailModal(item)}
                                                 className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
                                             >
                                                 Detail
@@ -313,14 +521,18 @@ export default function SekumLpjPage() {
                                             {item.status === 'Menunggu Verifikasi' && (
                                                 <>
                                                     <button
-                                                        onClick={() => handleUpdateStatus(item.id, 'Disetujui')}
+                                                        type="button"
+                                                        disabled={isSaving}
+                                                        onClick={() => handleUpdateStatus(item, 'Disetujui')}
                                                         title="Validasi & Setujui LPJ"
                                                         className="rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 p-1.5 hover:bg-emerald-600 hover:text-white transition cursor-pointer"
                                                     >
                                                         <Check className="size-3.5" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleUpdateStatus(item.id, 'Revisi')}
+                                                        type="button"
+                                                        disabled={isSaving}
+                                                        onClick={() => handleUpdateStatus(item, 'Revisi')}
                                                         title="Minta Revisi Berkas"
                                                         className="rounded-lg bg-amber-50 text-amber-600 border border-amber-200 p-1.5 hover:bg-amber-600 hover:text-white transition cursor-pointer"
                                                     >
@@ -328,14 +540,24 @@ export default function SekumLpjPage() {
                                                     </button>
                                                 </>
                                             )}
+                                            <button
+                                                type="button"
+                                                disabled={isSaving}
+                                                onClick={() => handleDeleteLpj(item)}
+                                                title="Hapus Berkas LPJ"
+                                                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
+                                            >
+                                                <Trash2 className="size-3.5" />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ))
+                        )}
                         </tbody>
                     </table>
 
-                    {filteredLpj.length === 0 && (
+                    {!isLoading && filteredLpj.length === 0 && (
                         <div className="py-12 text-center">
                             <FileText className="mx-auto size-8 text-slate-300" />
                             <p className="mt-2 text-xs font-semibold text-slate-500">Tidak ada data LPJ yang cocok.</p>
@@ -344,7 +566,6 @@ export default function SekumLpjPage() {
                 </div>
             </div>
 
-            {/* Modal Detail LPJ */}
             <AnimatePresence>
                 {selectedLpj && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -363,7 +584,7 @@ export default function SekumLpjPage() {
                         >
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div>
-                                    <span className="font-mono text-[10px] font-bold text-blue-600">{selectedLpj.id}</span>
+                                    <span className="font-mono text-[10px] font-bold text-blue-600">{selectedLpj.lpj_code}</span>
                                     <h3 className="text-base font-bold text-slate-900">{selectedLpj.title}</h3>
                                 </div>
                                 <button
@@ -381,29 +602,43 @@ export default function SekumLpjPage() {
                                 </div>
                                 <div className="flex justify-between py-1 border-b border-slate-100">
                                     <span className="text-slate-400 font-medium">Rencana Anggaran (RAB):</span>
-                                    <span className="font-mono font-bold text-slate-900">{formatRupiah(selectedLpj.budgetPlanned)}</span>
+                                    <span className="font-mono font-bold text-slate-900">
+                                        {formatRupiah(selectedLpj.budget_planned)}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between py-1 border-b border-slate-100">
                                     <span className="text-slate-400 font-medium">Realisasi Dana:</span>
-                                    <span className="font-mono font-bold text-emerald-600">{formatRupiah(selectedLpj.budgetUsed)}</span>
+                                    <span className="font-mono font-bold text-emerald-600">
+                                        {formatRupiah(selectedLpj.budget_used)}
+                                    </span>
                                 </div>
                                 <div className="py-1">
-                                    <span className="text-slate-400 font-medium block mb-1">Catatan Verifikasi:</span>
-                                    <p className="rounded-xl bg-slate-50 p-3 text-slate-600 border border-slate-100 leading-relaxed font-medium">
-                                        {selectedLpj.notes || 'Belum ada catatan khusus.'}
-                                    </p>
+                                    <label className="text-slate-600 font-bold block mb-1.5">
+                                        Catatan Verifikasi Sekretariat:
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        value={detailNotes}
+                                        onChange={(e) => setDetailNotes(e.target.value)}
+                                        placeholder="Tuliskan catatan pemeriksaan berkas, lampiran nota, atau poin revisi..."
+                                        className="w-full rounded-xl bg-slate-50 p-3 text-slate-700 border border-slate-200 leading-relaxed font-medium outline-none focus:border-blue-600 focus:bg-white"
+                                    />
                                 </div>
 
-                                <div className="pt-4 flex gap-2">
+                                <div className="pt-3 flex gap-2">
                                     <button
-                                        onClick={() => handleUpdateStatus(selectedLpj.id, 'Disetujui')}
-                                        className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition cursor-pointer"
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() => handleUpdateStatus(selectedLpj, 'Disetujui', detailNotes)}
+                                        className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-xs font-semibold text-white hover:bg-emerald-500 transition cursor-pointer disabled:opacity-50"
                                     >
                                         Setujui LPJ
                                     </button>
                                     <button
-                                        onClick={() => handleUpdateStatus(selectedLpj.id, 'Revisi')}
-                                        className="flex-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 py-2.5 text-xs font-semibold hover:bg-amber-100 transition cursor-pointer"
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() => handleUpdateStatus(selectedLpj, 'Revisi', detailNotes)}
+                                        className="flex-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 py-2.5 text-xs font-semibold hover:bg-amber-100 transition cursor-pointer disabled:opacity-50"
                                     >
                                         Minta Revisi
                                     </button>
@@ -414,7 +649,6 @@ export default function SekumLpjPage() {
                 )}
             </AnimatePresence>
 
-            {/* Modal Tambah LPJ */}
             <AnimatePresence>
                 {isSubmitModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -444,13 +678,14 @@ export default function SekumLpjPage() {
                                 </button>
                             </div>
 
-                            <div className="mt-4 space-y-3.5">
+                            <form onSubmit={handleAddLpj} className="mt-4 space-y-3.5">
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-slate-700">
                                         Judul Program Kerja / LPJ <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
+                                        required
                                         value={formTitle}
                                         onChange={(e) => setFormTitle(e.target.value)}
                                         placeholder="Contoh: LPJ Informatics Skill Upgrade 2026"
@@ -471,6 +706,7 @@ export default function SekumLpjPage() {
                                         <option value="Departemen Pengmas">Departemen Pengmas</option>
                                         <option value="Departemen Medkominfo">Departemen Medkominfo</option>
                                         <option value="Departemen RnD">Departemen RnD</option>
+                                        <option value="Departemen Advokasi">Departemen Advokasi</option>
                                         <option value="Internal / Sekum">Internal / Sekum</option>
                                     </select>
                                 </div>
@@ -482,6 +718,8 @@ export default function SekumLpjPage() {
                                         </label>
                                         <input
                                             type="number"
+                                            required
+                                            min={1}
                                             value={formBudgetPlanned}
                                             onChange={(e) => setFormBudgetPlanned(e.target.value)}
                                             placeholder="3500000"
@@ -494,12 +732,26 @@ export default function SekumLpjPage() {
                                         </label>
                                         <input
                                             type="number"
+                                            min={0}
                                             value={formBudgetUsed}
                                             onChange={(e) => setFormBudgetUsed(e.target.value)}
                                             placeholder="3200000"
                                             className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 px-3.5 text-xs font-mono font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-600/10"
                                         />
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                                        Catatan Awal / Tautan Berkas (Opsional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formNotes}
+                                        onChange={(e) => setFormNotes(e.target.value)}
+                                        placeholder="Contoh: Berkas fisik & link Google Drive sudah diserahkan"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 px-3.5 text-xs font-medium text-slate-900 outline-none transition focus:border-blue-600 focus:bg-white"
+                                    />
                                 </div>
 
                                 <div className="mt-5 flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -511,15 +763,19 @@ export default function SekumLpjPage() {
                                         Batal
                                     </button>
                                     <button
-                                        type="button"
-                                        onClick={handleAddLpj}
-                                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer"
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-blue-600/10 transition hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                                     >
-                                        <CheckCircle2 className="size-4" />
+                                        {isSaving ? (
+                                            <Loader2 className="size-4 animate-spin" />
+                                        ) : (
+                                            <CheckCircle2 className="size-4" />
+                                        )}
                                         <span>Simpan & Verifikasi</span>
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}
