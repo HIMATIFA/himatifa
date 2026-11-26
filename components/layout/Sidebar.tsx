@@ -1,6 +1,7 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useEffect, useMemo, useTransition } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import {
     LayoutDashboard,
     Newspaper,
@@ -19,7 +20,8 @@ import {
     Store,
     FileCheck2,
     X,
-    ShieldCheck
+    ShieldCheck,
+    MessageSquareText
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -34,6 +36,7 @@ interface NavItem {
     icon: React.ElementType
     roles?: UserRole[]
     count?: number
+    isUnreadAlert?: boolean
 }
 
 interface NavSection {
@@ -105,10 +108,70 @@ export default function Sidebar({
     const pathname = usePathname()
     const [isPending, startTransition] = useTransition()
 
-    // Normalize ekraf to adminekraf
+    const [realtimeCounts, setRealtimeCounts] = useState({
+        berita: 0,
+        agenda: 0,
+        aspirasiUnread: 0,
+    })
+
+    const supabase = useMemo(
+        () =>
+            createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            ),
+        []
+    )
+
     const normalizedRole: UserRole = userRole === 'ekraf' ? 'adminekraf' : userRole
     const currentProfile = roleDetails[normalizedRole] || roleDetails.admin
     const displayName = userName || userEmail || currentProfile.name
+
+    useEffect(() => {
+        if (normalizedRole !== 'admin') return
+
+        const fetchCounts = async () => {
+            const [beritaRes, agendaRes, aspirasiRes] = await Promise.all([
+                supabase.from('berita').select('id', { count: 'exact', head: true }),
+                supabase.from('agenda').select('id', { count: 'exact', head: true }),
+                supabase
+                    .from('aspirasi')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('status', 'Menunggu'),
+            ])
+
+            setRealtimeCounts({
+                berita: beritaRes.count ?? 0,
+                agenda: agendaRes.count ?? 0,
+                aspirasiUnread: aspirasiRes.count ?? 0,
+            })
+        }
+
+        fetchCounts()
+
+        const channel = supabase
+            .channel('sidebar-realtime-counts')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'berita' },
+                () => fetchCounts()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'agenda' },
+                () => fetchCounts()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'aspirasi' },
+                () => fetchCounts()
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [supabase, normalizedRole])
 
     const handleLogout = () => {
         startTransition(async () => {
@@ -121,7 +184,6 @@ export default function Sidebar({
         return pathname.startsWith(path)
     }
 
-    // Role-based Nav Sections strictly mapped
     const masterNavSections: NavSection[] = [
         {
             title: 'Overview',
@@ -159,10 +221,30 @@ export default function Sidebar({
             title: 'Content & Media',
             roles: ['admin'],
             items: [
-                { id: 'berita', label: 'Artikel & Berita', path: '/admin/berita', icon: Newspaper, count: 6 },
-                { id: 'agenda', label: 'Agenda Kegiatan', path: '/admin/agenda', icon: CalendarDays, count: 5 },
+                {
+                    id: 'berita',
+                    label: 'Artikel & Berita',
+                    path: '/admin/berita',
+                    icon: Newspaper,
+                    count: realtimeCounts.berita,
+                },
+                {
+                    id: 'agenda',
+                    label: 'Agenda Kegiatan',
+                    path: '/admin/agenda',
+                    icon: CalendarDays,
+                    count: realtimeCounts.agenda,
+                },
                 { id: 'bph', label: 'Struktur BPH', path: '/admin/bph', icon: Users },
                 { id: 'kategori', label: 'Kategori Modul', path: '/admin/kategori', icon: Folders },
+                {
+                    id: 'aspirasi',
+                    label: 'Aspirasi Masuk',
+                    path: '/admin/aspirasi',
+                    icon: MessageSquareText,
+                    count: realtimeCounts.aspirasiUnread > 0 ? realtimeCounts.aspirasiUnread : undefined,
+                    isUnreadAlert: realtimeCounts.aspirasiUnread > 0,
+                },
             ],
         },
         {
@@ -185,7 +267,6 @@ export default function Sidebar({
 
     const renderNavContent = (collapsed: boolean, onNavClick?: () => void) => (
         <>
-            {/* Header Brand */}
             <div
                 className={`flex h-16 shrink-0 items-center justify-between border-b border-slate-100 ${
                     collapsed ? 'justify-center px-2' : 'gap-3 px-6'
@@ -205,7 +286,6 @@ export default function Sidebar({
                     )}
                 </div>
 
-                {/* Close Button for mobile drawer */}
                 {onNavClick && (
                     <button
                         onClick={onCloseMobile}
@@ -217,7 +297,6 @@ export default function Sidebar({
                 )}
             </div>
 
-            {/* Active Role Badge */}
             {!collapsed && (
                 <div className="px-3 pt-3">
                     <div className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200/90 bg-slate-50/80 px-3 py-2.5">
@@ -230,7 +309,6 @@ export default function Sidebar({
                 </div>
             )}
 
-            {/* Nav Menu Items */}
             <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-none space-y-5">
                 {filteredSections.map((section, idx) => (
                     <div key={idx}>
@@ -249,7 +327,7 @@ export default function Sidebar({
                                         href={item.path}
                                         onClick={onNavClick}
                                         title={collapsed ? item.label : undefined}
-                                        className={`group/btn flex items-center rounded-xl py-2.5 text-xs font-bold transition-all ${
+                                        className={`group/btn relative flex items-center rounded-xl py-2.5 text-xs font-bold transition-all ${
                                             collapsed ? 'justify-center px-0' : 'justify-between px-3'
                                         } ${
                                             active
@@ -258,22 +336,29 @@ export default function Sidebar({
                                         }`}
                                     >
                                         <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
-                                            <item.icon
-                                                className={`size-4 shrink-0 transition-colors ${
-                                                    active
-                                                        ? 'text-blue-600'
-                                                        : 'text-slate-400 group-hover/btn:text-slate-600'
-                                                }`}
-                                            />
+                                            <div className="relative">
+                                                <item.icon
+                                                    className={`size-4 shrink-0 transition-colors ${
+                                                        active
+                                                            ? 'text-blue-600'
+                                                            : 'text-slate-400 group-hover/btn:text-slate-600'
+                                                    }`}
+                                                />
+                                                {collapsed && item.isUnreadAlert && (
+                                                    <span className="absolute -right-1 -top-1 size-2 rounded-full bg-rose-500 ring-2 ring-white" />
+                                                )}
+                                            </div>
                                             {!collapsed && <span>{item.label}</span>}
                                         </div>
 
                                         {!collapsed && item.count !== undefined && (
                                             <span
                                                 className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
-                                                    active
-                                                        ? 'bg-blue-100 text-blue-700'
-                                                        : 'bg-slate-100 text-slate-500'
+                                                    item.isUnreadAlert
+                                                        ? 'bg-rose-500 text-white'
+                                                        : active
+                                                            ? 'bg-blue-100 text-blue-700'
+                                                            : 'bg-slate-100 text-slate-500'
                                                 }`}
                                             >
                                                 {item.count}
@@ -287,7 +372,6 @@ export default function Sidebar({
                 ))}
             </div>
 
-            {/* Profile Footer & Logout */}
             <div className="border-t border-slate-100 p-3">
                 <div
                     className={`flex items-center rounded-xl p-2 transition-colors hover:bg-slate-50 ${
@@ -331,7 +415,6 @@ export default function Sidebar({
 
     return (
         <>
-            {/* 1. Desktop & Tablet Sidebar */}
             <aside
                 className={`hidden md:flex shrink-0 flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out ${
                     isCollapsed ? 'w-20' : 'w-[280px]'
@@ -340,7 +423,6 @@ export default function Sidebar({
                 {renderNavContent(isCollapsed)}
             </aside>
 
-            {/* 2. Mobile Drawer & Backdrop */}
             {isMobileOpen && (
                 <div className="fixed inset-0 z-50 flex md:hidden">
                     <div
